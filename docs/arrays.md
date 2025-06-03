@@ -5,6 +5,7 @@
   - [数组理论知识](#数组理论知识)
   - [二分查找](#二分查找)
   - [移除元素](#移除元素)
+  - [⻓度最⼩的⼦数组](#度最的数组)
 
 
 ## 数组理论知识
@@ -451,4 +452,170 @@ public:
 };
 ```
 
-其实思路就是归并的思路。但是过程不算太顺利，这也说明了，不熟练了。问题不大大。
+其实思路就是归并的思路。但是过程不算太顺利，这也说明了，不熟练了。问题不大大。这个是 O(n) 的。
+
+
+## ⻓度最⼩的⼦数组
+
+https://leetcode.cn/problems/minimum-size-subarray-sum/
+
+我能直接想到滑动窗口的双指针解法。区间和大了，就slow++，区间和小了就fast++。
+
+
+```cpp
+class Solution {
+public:
+    int minSubArrayLen(int target, vector<int>& nums) {
+        // 处理下特殊情况
+        if (nums.size() == 1) {
+            if(nums[0] >= target) return 1;
+            else return 0;
+        }
+        int len = INT32_MAX; // 滑动窗口大小
+        int slow = 0;
+        int fast = 0;
+        int current_sum = nums[0];
+        while(fast < nums.size()) {
+            if (current_sum >= target) {
+                int cur_len = fast-slow+1;
+                if(cur_len < len) len = cur_len;
+                if(slow == fast) {slow++; fast++; current_sum = nums[fast];}
+                else {current_sum-=nums[slow++];}
+            } else if(current_sum < target) {
+                fast++;
+                if(fast >= nums.size()) break;
+                current_sum += nums[fast];
+            }
+        }
+        return len == INT32_MAX ? 0 : len;
+    }
+};
+```
+
+我的思路没问题，和carl的一样，顺利通过。
+
+
+[904. 水果成篮](https://leetcode.cn/problems/fruit-into-baskets/description/)
+
+这题题目有点难理解，我理解了很久。还是打算用滑动窗口去做即可。
+
+这题真的有点难，先按照自己的思路写一下，写了很久，主要是指针有点难管理清楚。
+
+```cpp
+class Solution {
+private:
+    bool in_pair(std::pair<int,int>& p, int x) {
+        // if (x == p.first) return true;
+        // if (x == p.second) {
+        //     std::swap(p.first, p.second);
+        //     return true;
+        // }
+        // return false;
+        return p.second == x || p.first == x;
+    }
+public:
+    int totalFruit(vector<int>& fruits) {
+        // 这个题目太难理解了
+        // 我理解了之后，翻译成人话：找一个最长的，只包含两种元素的子序列（即这个子序列set之后的size为2）
+        // 我用一个 pair 来记录哪些类型是记录过的
+        if(fruits.size() == 1) return 1;
+        // 初始化
+        int len = 2;
+        int slow = 0;
+        int fast = 0;
+        // 初始化
+        while(fast < fruits.size()) {
+            std::pair<int, int> p;
+            p.first = fruits[slow];
+            p.second = -1;
+            while(fast < fruits.size()) {
+                if(in_pair(p, fruits[fast])) {
+                    fast++;
+                    continue;
+                }
+                else if(p.second == -1) {
+                    p.second = fruits[fast];
+                    fast++;
+                    continue;
+                }
+                else if(in_pair(p, fruits[fast]) == false && p.first != -1 && p.second != -1) break;
+            }
+            // if(fast >= fruits.size()) break;
+            int cur_len = fast - slow;
+            // std::cout << cur_len << std::endl;
+            if(cur_len > len) len = cur_len;
+            // 下一轮迭代
+            if(fast >= fruits.size()) break;
+            assert(fruits[fast]!=fruits[fast-1]);
+            int temp = fruits[fast-1];
+            slow = fast-1;
+            while(fruits[slow]==temp) slow--;
+            slow++;
+        }
+        return len;
+    }
+};
+```
+
+不过最后也是艰难通过。
+
+
+[76. 最小覆盖子串](https://leetcode.cn/problems/minimum-window-substring/description/)
+
+```cpp
+class Solution {
+private:
+    std::unordered_map<char, int> m;
+    std::unordered_map<char, int> m_for_check;
+private:
+    void init_check_map(const std::string& t) {
+        for(const auto& e : t) {
+            m_for_check[e] += 1;
+        }
+    }
+    bool is_valid(const std::string& t) {
+        for (const auto& e : t)
+            if (m[e] < m_for_check[e])
+                return false;
+        return true;
+    }
+    void print_m() {
+        for (const auto& e : m)
+            std::cout << e.first << ":" << e.second << std::endl;
+    }
+public:
+    std::string minWindow(std::string s, std::string t) {
+        // 处理边界条件
+        if (s.size() == 1) {
+            return s == t ? s : "";
+        }
+        // 开始处理
+        init_check_map(t);
+        int slow = 0;
+        int fast = 0;
+        int len = INT32_MAX;
+        std::string ret_string;
+        m[s[fast]] += 1;
+        while (fast < s.size()) {
+            bool res = is_valid(t);
+            // std::cout << slow << ":" << fast << std::endl; print_m();
+            // std::cout << res << std::endl; exit(1);
+            if (res) {
+                int cur_len = fast - slow + 1;
+                if (cur_len < len) {
+                    len = cur_len;
+                    ret_string = std::string(s.begin() + slow, s.begin() + fast + 1);
+                    // std::cout << "更新 ret: " << ret_string << std::endl; 
+                }
+                m[s[slow]] -= 1;
+                slow++;
+            } else {
+                fast++;
+                m[s[fast]] += 1;
+            }
+        }
+        return ret_string;
+    }
+};
+```
+写了一个版本，但是没有通过，超出时间限制了，明天再看看吧。
