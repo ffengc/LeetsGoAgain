@@ -1,12 +1,17 @@
 # 数组
 
+
+- [数组](#数组)
+  - [数组理论知识](#数组理论知识)
+  - [二分查找](#二分查找)
+  - [移除元素](#移除元素)
+
+
 ## 数组理论知识
 
 因为个人非常熟悉了，这里略过。
 
-### 题目
-
-### 二分查找
+## 二分查找
 
 https://leetcode.cn/problems/binary-search/description/
 
@@ -242,3 +247,208 @@ public:
     }
 };
 ```
+
+## 移除元素
+
+https://leetcode.cn/problems/remove-element/description/
+
+好的方法肯定是双指针，这个方法后续肯定是很常用的。
+慢指针，指向后续东西填补过来的位置。快指针寻找填补过来的数字。
+我自己先写一个版本。
+
+我自己写的这个版本，用双指针，但是用了-1去记录数组的数字是否被移动过。感觉不是最优写法。不过也通过了，总体来说比较顺利，效率也是ok的。
+
+```cpp
+class Solution {
+public:
+    int removeElement(vector<int>& nums, int val) {
+        if(nums.size() == 0) return 0;
+        int slow = 0;
+        while(slow < nums.size() && nums[slow] != val) slow++;
+        int fast = slow;
+        while(fast < nums.size()) {
+            while(slow < nums.size() && nums[slow] != val && nums[slow] != -1) slow++;
+            if(fast < slow) fast = slow;
+            // 此时 slow 指向第一个需要删除的数字
+            while(fast < nums.size() && nums[fast] == val) fast++;
+            // 此时 fast 指向一个需要移动的数字
+            if(fast >= nums.size() || slow >= nums.size()) break;
+            nums[slow++] = nums[fast];
+            nums[fast++] = -1; // 用 -1 记录这个位置可以被覆盖。
+        }
+        return slow;
+    }
+};
+```
+
+看看carl的写法。
+
+```cpp
+// 时间复杂度：O(n)
+// 空间复杂度：O(1)
+class Solution {
+    public:
+    int removeElement(vector<int>& nums, int val) {
+        int slowIndex = 0;
+        for (int fastIndex = 0; fastIndex < nums.size(); fastIndex++) {
+            if (val != nums[fastIndex]) {
+                nums[slowIndex++] = nums[fastIndex];
+            }
+        }
+        return slowIndex;
+    }
+};
+```
+
+用 [0, 1, 2, 2, 3, 0, 4, 2], val=2 去理解了一下这个写法，他可以重复赋值的，就不用做这么多判断了，确实更简洁。
+
+[26. 删除有序数组中的重复项](https://leetcode.cn/problems/remove-duplicates-from-sorted-array/description/)
+
+```cpp
+class Solution {
+public:
+    int removeDuplicates(vector<int>& nums) {
+        if (nums.size() == 1) return 1;
+        int slow = 0;
+        int fast = 1;
+        while(fast < nums.size()) {
+            while(1) {
+                if(fast < nums.size() && nums[slow] == nums[fast]) fast++;
+                else break;
+            }
+            if(fast >= nums.size()) break;
+            // 此时 slow 和 fast 指向的数字不一样
+            slow++;
+            assert(slow < nums.size());
+            nums[slow] = nums[fast++];
+        }
+        return ++slow;
+    }
+};
+```
+直接通过，没啥问题，在草稿纸上做过一般都没问题。
+
+[283. 移动零](https://leetcode.cn/problems/move-zeroes/description/)
+
+这题个人感觉很简单，slow指针指向0，fast指向非0，交换即可。
+
+```cpp
+class Solution {
+public:
+    void moveZeroes(vector<int>& nums) {
+        if (nums.size() == 1) return;
+        int slow = 0;
+        int fast = 0;
+        while(fast < nums.size()) {
+            while(slow < nums.size() && nums[slow] != 0) slow++;
+            while(fast < nums.size() && nums[fast] == 0) fast++;
+            if(slow > fast) {
+                fast = slow;
+                continue;
+            }
+            if(fast >= nums.size()) break;
+            std::swap(nums[fast], nums[slow]);
+            slow++;
+        }
+    }
+};
+```
+问题不大，顺利通过
+
+[844. 比较含退格的字符串](https://leetcode.cn/problems/backspace-string-compare/description/)
+
+这个题怎么感觉用栈做是最好的，先试试用栈。不过这样空间就不是O(1)了。
+
+```cpp
+class Solution {
+public:
+    bool backspaceCompare(string s, string t) {
+        std::stack<int> st1;
+        std::stack<int> st2;
+        for (const auto& e : s) {
+            if (e == '#' && st1.size() > 0) st1.pop();
+            else if (e == '#' && st1.size() == 0) continue;
+            else st1.push(e);
+        }
+        for(const auto& e : t) {
+            if (e == '#' && st2.size() > 0) st2.pop();
+            else if (e == '#' && st2.size() == 0) continue;
+            else st2.push(e);
+        }
+        return st1 == st2;
+    }
+};
+```
+用栈没问题，速通。
+
+试一下用双指针，空间用 O(1)
+
+
+这题做的有点慢，不过最后也是做出来了。
+
+```cpp
+class Solution {
+private:
+    int simplify(std::string& str) {
+        // int current_size = str.size();
+        int fast = 0;
+        int slow = 0;
+        for(int i = 0; i < str.size(); ++i) {
+            if(str[i] == '#') {
+                fast++;
+                if(slow > 0) slow--;
+            } else if(str[i] != '#') {
+                slow++;
+                fast++;
+            }
+            if(fast >= str.size()) break;
+            str[slow] = str[fast];
+        }
+        return slow; // slow的大小表示字符串长短
+    }
+public:
+    bool backspaceCompare(string s, string t) {
+        // 使用双指针
+        // fast指针为探索指针
+        // slow指针为有效位置指针
+        // fast指针负责探索前面路况，如果遇到#，则有效位置--，同时str的长度--
+        // fast指针如果遇到有效字符，则str长度不变，如果此时fast和slow不在同一位置，则覆盖
+        int ssize = simplify(s);
+        std::cout << ssize << ":" << std::string(s.begin(), s.begin()+ssize) << std::endl;
+        int tsize = simplify(t);
+        std::cout << tsize << ":" << std::string(t.begin(), t.begin()+tsize) << std::endl;
+        return (std::string(s.begin(), s.begin()+ssize) == std::string(t.begin(), t.begin()+tsize)) || (ssize == 0 && tsize == 0);
+        // 最后这里重新构造string，表示切割后的字符串
+    }
+};
+```
+
+[977. 有序数组的平方](https://leetcode.cn/problems/squares-of-a-sorted-array/description/)
+
+这一题最好是用归并的思想。
+
+之前的一类题：两个升序的序列，合成一个升序序列，双指针归并思想。题目没说空间要 O(1)。
+
+
+```cpp
+class Solution {
+public:
+    vector<int> sortedSquares(vector<int>& nums) {
+        std::vector<int> ans;
+        int right = 0;
+        while(right < nums.size() && nums[right] < 0) right++;
+        int left = right - 1;
+        while(right < nums.size() && left >= 0) {
+            size_t left_ans = nums[left] * nums[left];
+            size_t right_ans = nums[right] * nums[right];
+            if(left_ans < right_ans) {left--; ans.push_back(left_ans);}
+            else {right++; ans.push_back(right_ans);}
+        }
+        while(left >= 0) ans.push_back(nums[left]*nums[left--]);
+        while(right < nums.size()) ans.push_back(nums[right]*nums[right++]);
+        return ans;
+    }
+};
+```
+
+其实思路就是归并的思路。但是过程不算太顺利，这也说明了，不熟练了。问题不大大。
