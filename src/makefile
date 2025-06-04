@@ -1,5 +1,5 @@
-test:test1.cc
-	g++ -o $@ $^ -std=c++11
+test:test2.cc
+	g++ -o $@ $^ -std=c++11 -g
 .PHONY:clean
 clean:
 	rm -f test
