@@ -7,6 +7,7 @@
   - [移除元素](#移除元素)
   - [⻓度最⼩的⼦数组](#度最的数组)
   - [螺旋矩阵II](#螺旋矩阵ii)
+  - [区间和 (前缀和思想)](#区间和-前缀和思想)
 
 
 ## 数组理论知识
@@ -1002,4 +1003,82 @@ public:
         return res_vec;
     }
 };
+```
+
+## 区间和 (前缀和思想)
+
+本题为代码随想录后续扩充题目，卡哥还没有视频讲解，顺便练习一下ACM输入输出模式（笔试面试必备）
+
+https://kamacoder.com/problempage.php?pid=1070
+
+**输入描述：**
+
+第一行输入为整数数组 Array 的长度 n，接下来 n 行，每行一个整数，表示数组的元素。随后的输入为需要计算总和的区间，直至文件结束。
+
+**输出描述：**
+
+输出每个指定区间内元素的总和。
+
+**输入示例：**
+
+> 5 \
+> 1 \
+> 2 \
+> 3 \
+> 4 \
+> 5 \
+> 0 1 \
+> 1 3
+
+**输出示例**
+
+> 3 \
+> 9
+
+**数据范围：**
+
+`0 < n <= 100000`
+
+思路：这里引入一个非常重要的算法，前缀和。
+
+**如果，我们想统计，在vec数组上 下标 2 到下标 5 之间的累加和，那是不是就用 p[5] - p[1] 就可以了。**
+
+所以前缀和是很重要的。
+
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <assert.h>
+
+void test() {
+    int n = 0;
+    std::cin >> n; // 数组的大小
+    assert(n != 0);
+    std::vector<int> nums;
+    std::vector<int> prefix;
+    for (int i = 0; i < n; ++i) {
+        int x = 0;
+        std::cin >> x; // 输入的数字
+        nums.push_back(x);
+        if(i == 0) {
+            prefix.push_back(x);
+        } else {
+            prefix.push_back(x + prefix[i-1]);
+        }
+    }
+    int l, r;
+    while(std::cin >> l >> r) {
+        int sum;
+        if(l == 0) sum = prefix[r];
+        else sum = prefix[r] - prefix[l - 1];
+        std::cout << sum << std::endl;
+    }
+}
+
+int main() {
+    test();
+    return 0;
+}
 ```
