@@ -6,6 +6,7 @@
   - [二分查找](#二分查找)
   - [移除元素](#移除元素)
   - [⻓度最⼩的⼦数组](#度最的数组)
+  - [螺旋矩阵II](#螺旋矩阵ii)
 
 
 ## 数组理论知识
@@ -619,3 +620,386 @@ public:
 };
 ```
 写了一个版本，但是没有通过，超出时间限制了，明天再看看吧。
+
+题解：
+```cpp
+class Solution {
+public:
+    unordered_map <char, int> ori, cnt;
+    bool check() {
+        for (const auto &p: ori) {
+            if (cnt[p.first] < p.second) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /* 我大概看明白了
+        ori这个map是用来作对照的
+        cnt这个map是用来记录t中字符出现的次数的
+        这里和我的区别就是，我的cnt（m）记录所有s中的字符，其实不需要记录这么多，记录和t相关的即可了
+        check()函数用来表示当前子串是否合法
+     */
+    string minWindow(string s, string t) {
+        for (const auto &c: t) {
+            ++ori[c]; // 这里先初始化ori
+        }
+        int l = 0, r = -1;
+        int len = INT_MAX, ansL = -1, ansR = -1;
+
+        while (r < int(s.size())) {
+            if (ori.find(s[++r]) != ori.end()) {
+                ++cnt[s[r]]; // 存在所需要的字符，则cnt
+            }
+            while (check() && l <= r) {
+                if (r - l + 1 < len) {
+                    len = r - l + 1; // 更新最新的len
+                    ansL = l; // 记录下标而已，其实我用res_string也是一样的，都是可以的
+                }
+                if (ori.find(s[l]) != ori.end()) {
+                    --cnt[s[l]]; // 因为l指针准备向右了，先看看这个指针指向的字符是不是t所需的，如果是，才需要控制cnt，否则直接++l即可了
+                }
+                ++l;
+            }
+        }
+
+        return ansL == -1 ? string() : s.substr(ansL, len);
+    }
+};
+```
+
+我的思路是完全没问题的，个人感觉超时问题就是出在 cnt (m) 这个map里面，答案里cnt只管理有用字符，而我管理了全部字符。 
+
+## 螺旋矩阵II
+
+https://leetcode.cn/problems/spiral-matrix-ii/description/
+
+
+**这道题⽬可以说在⾯试中出现频率较⾼的题⽬，本题并不涉及到什么算法，就是模拟过程，但却⼗分考察对代码的掌控能⼒。**
+
+
+这题我先按自己的思路试一下吧。
+
+```cpp
+class Solution {
+private:
+    struct self_reference_pair {
+        std::string first;
+        self_reference_pair* second;
+        bool operator==(const self_reference_pair& self) { return first == self.first; }
+    }; //
+private:
+    bool is_location_valid(const std::vector<std::vector<bool>>& check_vec, const std::pair<int, int>& loc) {
+        int limit = check_vec.size();
+        if (loc.first >= 0 && loc.second >= 0 && loc.first < limit && loc.second < limit && check_vec[loc.first][loc.second] == false)
+            return true;
+        return false;
+        // return check_vec[loc.first][loc.second] == false;
+    } //
+public:
+    std::vector<std::vector<int>> generateMatrix(int n) {
+        auto check_vec = std::vector<std::vector<bool>>(n, std::vector<bool>(n, false));
+        auto res_vec = std::vector<std::vector<int>>(n, std::vector<int>(n, 0));
+        // 构建一个mode的简易链表
+        self_reference_pair down_mode, left_mode, up_mode; // 提前声明
+        self_reference_pair right_mode = { "right_mode", &down_mode };
+        down_mode = { "down_mode", &left_mode };
+        left_mode = { "left_mode", &up_mode };
+        up_mode = { "up_mode", &right_mode };
+        // 开始循环
+        int current_n = 1;
+        self_reference_pair current_mode = right_mode; // 一开始向右
+        std::pair<int, int> location = { 0, 0 };
+        while (current_n <= n * n) {
+            if (current_mode == right_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= n * n) {
+                    // if (current_n == n * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    // std::cout << "is_valid: " << is_valid << std::endl;
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        // std::cout << location.first << ":" << location.second << std::endl;
+                        location.first += 1;
+                        location.second -= 1;
+                        // std::cout << location.first << ":" << location.second << std::endl;
+                        if (current_n == n * n) {
+                            // std::cout << "call1" << std::endl;
+                            res_vec[location.first][location.second] = current_n;
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec[location.first][location.second] = current_n;
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == n * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first;
+                    location.second++;
+                }
+            } else if (current_mode == down_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= n * n) {
+                    // if (current_n == n * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first -= 1;
+                        location.second -= 1;
+                        if (current_n == n * n) {
+                            // std::cout << "call2" << std::endl;
+                            res_vec[location.first][location.second] = current_n;
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec[location.first][location.second] = current_n;
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == n * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first++;
+                    location.second;
+                }
+            } else if (current_mode == left_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                // std::cout << location.first << ":" << location.second << std::endl;
+                while (current_n <= n * n) {
+                    // if (current_n == n * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    // std::cout << "here" << std::endl;
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first -= 1;
+                        location.second += 1;
+                        if (current_n == n * n) {
+                            // std::cout << "call3" << std::endl;
+                            res_vec[location.first][location.second] = current_n;
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec[location.first][location.second] = current_n;
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == n * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first;
+                    location.second--;
+                }
+            } else if (current_mode == up_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= n * n) {
+                    // if (current_n == n * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first++;
+                        location.second++;
+                        if (current_n == n * n) {
+                            // std::cout << "call4" << std::endl;
+                            res_vec[location.first][location.second] = current_n;
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec[location.first][location.second] = current_n;
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == n * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first--;
+                    location.second;
+                }
+            } else {
+                assert(false);
+            }
+        }
+        return res_vec;
+    }
+};
+```
+调试了一个下午终于通过了。
+
+
+[54. 螺旋矩阵](https://leetcode.cn/problems/spiral-matrix/description/)
+[LCR 146. 螺旋遍历二维数组](https://leetcode.cn/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/description/)
+这两个题是一样的，顺利通过了，和上面的题类似，大部分代码可以重复使用。
+
+```cpp
+class Solution {
+private:
+    struct self_reference_pair {
+        std::string first;
+        self_reference_pair* second;
+        bool operator==(const self_reference_pair& self) { return first == self.first; }
+    }; //
+private:
+    bool is_location_valid(const std::vector<std::vector<bool>>& check_vec, const std::pair<int, int>& loc) {
+        int limit = check_vec.size();
+        int m = check_vec.size();
+        int n = check_vec[0].size();
+        if (loc.first >= 0 && loc.second >= 0 && loc.first < m && loc.second < n && check_vec[loc.first][loc.second] == false)
+            return true;
+        return false;
+    } //
+public:
+    std::vector<int> spiralOrder(std::vector<std::vector<int>>& matrix) {
+        int m = matrix.size();
+        int n = matrix[0].size();
+        auto check_vec = std::vector<std::vector<bool>>(m, std::vector<bool>(n, false));
+        auto res_vec = std::vector<int>(); // 初始化
+        // 构建一个mode的简易链表
+        self_reference_pair down_mode, left_mode, up_mode; // 提前声明
+        self_reference_pair right_mode = { "right_mode", &down_mode };
+        down_mode = { "down_mode", &left_mode };
+        left_mode = { "left_mode", &up_mode };
+        up_mode = { "up_mode", &right_mode };
+        // 开始循环
+        int current_n = 1;
+        self_reference_pair current_mode = right_mode; // 一开始向右
+        std::pair<int, int> location = { 0, 0 };
+        while (current_n <= m * n) {
+            if (current_mode == right_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= m * n) {
+                    // if (current_n == m * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    // std::cout << "is_valid: " << is_valid << std::endl;
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        // std::cout << location.first << ":" << location.second << std::endl;
+                        location.first += 1;
+                        location.second -= 1;
+                        // std::cout << location.first << ":" << location.second << std::endl;
+                        if (current_n == m * n) {
+                            // std::cout << "call1" << std::endl;
+                            res_vec.push_back(matrix[location.first][location.second]);
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    // res_vec[location.first][location.second] = current_n;
+                    res_vec.push_back(matrix[location.first][location.second]);
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == m * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first;
+                    location.second++;
+                }
+            } else if (current_mode == down_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= m * n) {
+                    // if (current_n == m * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first -= 1;
+                        location.second -= 1;
+                        if (current_n == m * n) {
+                            // std::cout << "call2" << std::endl;
+                            res_vec.push_back(matrix[location.first][location.second]);
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec.push_back(matrix[location.first][location.second]);
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == m * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first++;
+                    location.second;
+                }
+            } else if (current_mode == left_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                // std::cout << location.first << ":" << location.second << std::endl;
+                while (current_n <= m * n) {
+                    // if (current_n == m * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    // std::cout << "here" << std::endl;
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first -= 1;
+                        location.second += 1;
+                        if (current_n == m * n) {
+                            // std::cout << "call3" << std::endl;
+                            res_vec.push_back(matrix[location.first][location.second]);
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec.push_back(matrix[location.first][location.second]);
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == m * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first;
+                    location.second--;
+                }
+            } else if (current_mode == up_mode) {
+                // std::cout << "mode: " << current_mode.first << std::endl;
+                while (current_n <= m * n) {
+                    // if (current_n == m * n) {
+                    //     res_vec[location.first][location.second] = current_n;
+                    //     return res_vec;
+                    // }
+                    bool is_valid = is_location_valid(check_vec, location);
+                    if (is_valid == false) {
+                        // 需要转变mode
+                        current_mode = *(current_mode.second); // 没有填写数字，所以 current_n 不需要 ++
+                        location.first++;
+                        location.second++;
+                        if (current_n == m * n) {
+                            // std::cout << "call4" << std::endl;
+                            res_vec.push_back(matrix[location.first][location.second]);
+                            return res_vec;
+                        }
+                        break;
+                    }
+                    res_vec.push_back(matrix[location.first][location.second]);
+                    check_vec[location.first][location.second] = true;
+                    // if (current_n == m * n)
+                    //     return res_vec;
+                    current_n += 1;
+                    location.first--;
+                    location.second;
+                }
+            } else {
+                assert(false);
+            }
+        }
+        return res_vec;
+    }
+};
+```
