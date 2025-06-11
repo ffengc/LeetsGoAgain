@@ -5,6 +5,8 @@
   - [有效的字⺟异位词](#有效的字异位词)
   - [两个数组的交集](#两个数组的交集)
     - [那所有哈希的题都用set就好了，还用什么数组？这是对的吗？](#那所有哈希的题都用set就好了还用什么数组这是对的吗)
+  - [快乐数](#快乐数)
+  - [两数之和（经典重要题目）](#两数之和经典重要题目)
 
 
 ## 哈希表基础知识
@@ -101,6 +103,51 @@ public:
 
 [350. 两个数组的交集 II](https://leetcode.cn/problems/intersection-of-two-arrays-ii/description/)
 
+这个题我的思路是，`nums1 = [1,2,2,1], nums2 = [2,2]`。对于 `nums1` 来说，维护一个hash_table, 然后第二个元素是一个pair，用来记录nums1和nums2中出现的次数。
+
+遍历 `nums1` 的时候，次数++到pair的第一个元素中。遍历 `nums2` 的时候，次数++到pair的第二个元素中。
+
+**分析下复杂度：**
+
+遍历 `nums1` 和 `nums2` 是 O(n), 然后最后再遍历一次map取最小，这一次是 O(n)，所以最后也是 O(n)。
+
+```cpp
+class Solution {
+public:
+    vector<int> intersect(vector<int>& nums1, vector<int>& nums2) {
+        std::unordered_map<int, std::pair<int,int>> m;
+        std::vector<int> res;
+        for(const auto& e : nums1) // 遍历 nums1
+            m[e].first++;
+        for(const auto& e : nums2) // 遍历 nums2
+            if(m.find(e)!=m.end())
+                m[e].second++;
+        for(const auto& e : m) {
+            if(e.second.second == 0) continue;
+            for(int i = 0; i < std::min(e.second.first, e.second.second); ++i)
+                res.push_back(e.first);
+        }
+        return res;
+    }
+};
+```
+直接通过了。
+
+看看题解：
+> 由于同一个数字在两个数组中都可能出现多次，因此需要用哈希表存储每个数字出现的次数。对于一个数字，其在交集中出现的次数等于该数字在两个数组中出现次数的最小值。\
+> 首先遍历第一个数组，并在哈希表中记录第一个数组中的每个数字以及对应出现的次数，然后遍历第二个数组，对于第二个数组中的每个数字，如果在哈希表中存在这个数字，则将该数字添加到答案，并减少哈希表中该数字出现的次数。\
+> 为了降低空间复杂度，首先遍历较短的数组并在哈希表中记录每个数字以及对应出现的次数，然后遍历较长的数组得到交集。\
+> 作者：力扣官方题解
+链接：https://leetcode.cn/problems/intersection-of-two-arrays-ii/solutions/327356/liang-ge-shu-zu-de-jiao-ji-ii-by-leetcode-solution/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
+这个动画(来自力扣题解)可以解释好。
+
+![](https://assets.leetcode.cn/solution-static/350/350_fig1.gif)
+
+
 
 
 ### 那所有哈希的题都用set就好了，还用什么数组？这是对的吗？
@@ -110,3 +157,73 @@ public:
 直接使⽤`set`不仅占⽤空间⽐数组⼤，⽽且速度要⽐数组慢，`set`把数值映射到key上都要做hash计算的。不要⼩瞧这个耗时，在数据量⼤的情况，差距是很明显的。
 
 如果题目是有限制数据范围的，都要想想看看要不要用数组即可。
+
+## 快乐数
+
+https://leetcode.cn/problems/happy-number/description/
+
+这个题一眼看上去很难，其实不难的。**因为题目说了，会无限循环，所以表示，在求和过程中，sum会重复出现的。**
+
+用哈希表来看看和会不会重复出现就行了。
+
+没啥问题，直接通过了。
+
+
+```cpp
+class Solution {
+private:
+    // 先写一个函数，来计算每位数字上的平方和
+    int getSum(int n) {
+        int sum = 0;
+        while(n) {
+            sum += (n % 10) * (n % 10);
+            n /= 10;
+        }
+        return sum;
+    }
+public:
+    bool isHappy(int n) {
+        std::unordered_set<int> s;
+        while(1) {
+            int sum = getSum(n);
+            if(sum == 1) return true;
+            if(s.find(sum) == s.end()) s.insert(sum);
+            else return false; // 陷入循环
+            n = sum;
+        }
+        assert(false);
+    }
+};
+```
+
+## 两数之和（经典重要题目）
+
+https://leetcode.cn/problems/two-sum/description/
+
+这道题的思路是很重要的，很经典的题目。两个图可以说的很清楚（来自Carl）。
+
+![](./assets/两数之和1.png)
+![](./assets/两数之和2.png)
+
+**核心是：可以用哈希表来记录，哪些数字是被访问过的？访问过的这个元素在哪？所以用kv键值对的哈希表。**
+
+开始写代码。
+
+```cpp
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        std::unordered_map<int,int> m;
+        for(int i = 0; i < nums.size(); ++i) {
+            auto it = m.find(target-nums[i]);
+            if (it != m.end()) // 找到了
+                return std::vector<int>{it->second, i};
+            else
+                m.insert({nums[i], i});
+        }
+        assert(false);
+    }
+};
+```
+
+**这份代码很重要，后面很多题目都会用到！**
