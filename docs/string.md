@@ -5,6 +5,9 @@
   - [反转字符串II](#反转字符串ii)
   - [剑指Offer 05.替换空格](#剑指offer-05替换空格)
   - [翻转字符串⾥的单词](#翻转字符串的单词)
+  - [左旋转字符串](#左旋转字符串)
+  - [字符串匹配算法（重要算法）](#字符串匹配算法重要算法)
+  - [重复的子字符串](#重复的子字符串)
 
 
 ## 反转字符串
@@ -291,3 +294,214 @@ public:
     }
 };
 ```
+
+## 左旋转字符串
+
+https://leetcode.cn/problems/zuo-xuan-zhuan-zi-fu-chuan-lcof/
+
+这个题和上面那个基本上是一样的。
+
+**具体步骤为：**
+1. 反转区间为前n的⼦串
+2. 反转区间为n到末尾的⼦串
+3. 反转整个字符串
+
+```cpp
+class Solution {
+private:
+    void reverseByPtr(std::string& s, int left, int right) {
+        while (left < right)
+            std::swap(s[left++], s[right--]);
+    } //
+public:
+    std::string dynamicPassword(std::string password, int target) {
+        // 1 <= target < password.length <= 10000
+        // 1. 反转前target个字符
+        int ptr1 = 0;
+        int ptr2 = target - 1;
+        assert(ptr2 < password.size());
+        reverseByPtr(password, ptr1, ptr2);
+        reverseByPtr(password, ptr2 + 1, password.size() - 1);
+        reverseByPtr(password, 0, password.size() - 1);
+        return password;
+    }
+};
+```
+
+直接通过了。
+
+## 字符串匹配算法（重要算法）
+
+**内容来自：https://programmercarl.com/0028.%E5%AE%9E%E7%8E%B0strStr.html#%E7%AE%97%E6%B3%95%E5%85%AC%E5%BC%80%E8%AF%BE**
+
+视频学习：https://www.bilibili.com/video/BV1PD4y1o7nd/?vd_source=c92992dd205127af7566e47096862953
+
+
+文本串：aabaabaaf
+模式串：aabaaf
+
+文本串里面是否出现过模式串呢？
+
+
+**前缀表不减一的版本。**
+```cpp
+class Solution {
+private:
+    void getNext(int* next, std::string s) {
+        /**
+         * j指向前缀末尾位置
+         * i指向后缀末尾位置
+         */
+        // 1. 初始化next数组
+        int j = 0; // 前缀的末尾一开始就是0
+        next[0] = 0; // 在0的位置就是回退到0
+        // 2. 处理前后缀不相同的情况
+        for (int i = 1; i < s.size(); ++i) {
+            while (j > 0 && s[i] != s[j]) {
+                j = next[j - 1];
+            }
+            // 3. 处理前后缀相同的情况
+            if (s[i] == s[j])
+                j++;
+            // 4. 更新next数组的值
+            next[i] = j;
+        }
+    } //
+public:
+    int strStr(std::string haystack, std::string needle) {
+        if (needle.size() == 0)
+            return 0;
+        int* next = (int*)malloc(needle.size() * sizeof(int));
+        // 先构建next数组
+        getNext(next, needle);
+        int j = 0;
+        for (int i = 0; i < haystack.size(); ++i) {
+            // 遇到不匹配，则回退
+            while (j > 0 && haystack[i] != needle[j])
+                j = next[j - 1];
+            if (haystack[i] == needle[j])
+                j++; // 继续匹配
+            if (j == needle.size()) // 匹配到末尾
+                return (i - needle.size() + 1);
+        }
+        free(next);
+        return -1;
+    }
+};
+```
+
+>[!NOTE] 
+>1. 前缀表是否减1，其实就是回退的时候有区别。找冲突位置/还是找冲突-1的位置
+> `j = next[j - 1];` 还是 `j = next[j]`
+
+前缀表是否减1，其实就是回退的时候有区别。
+
+
+```cpp
+class Solution {
+public:
+    void getNext(int* next, const string& s) {
+        int j = -1;
+        next[0] = j;
+        for (int i = 1; i < s.size(); i++) {
+            while (j >= 0 && s[i] != s[j + 1]) { // 这里是+1
+                j = next[j]; // j = next[j] 而不是 j = next[j-1]
+            }
+            if (s[i] == s[j + 1]) { // 这里是+1
+                j++;
+            }
+            next[i] = j; 
+        }
+    }
+    int strStr(string haystack, string needle) {
+        if (needle.size() == 0) {
+            return 0;
+        }
+        int next[needle.size()];
+        getNext(next, needle);
+        int j = -1; // 因为next数组⾥记录的起始位置为-1
+        for (int i = 0; i < haystack.size(); i++) { // 注意i就从0开始
+            while (j >= 0 && haystack[i] != needle[j + 1]) { // 不匹配
+                j = next[j]; // j = next[j] 而不是 j = next[j-1]
+            }
+            if (haystack[i] == needle[j + 1]) { // 这里是+1
+                j++; // i的增加在for循环⾥
+            }
+            if (j == (needle.size() - 1)) { // 这里要-1
+                return (i - needle.size() + 1);
+            }
+        }
+        return -1;
+    }
+};
+```
+
+这两份代码非常重要！！！！！需要完全记住！
+
+## 重复的子字符串
+
+https://leetcode.cn/problems/repeated-substring-pattern/description/
+
+这题其实也是找字串。
+
+方法是：
+
+两个字符串放在一起，如果还能找到原来的串在中间，表示它是一个子串重复多次构成。
+
+当然，我们在判断 `s + s` 拼接的字符串⾥是否出现⼀个`s`的的时候，要刨除 `s + s` 的⾸字符和尾字符，这样避免在 `s + s` 中搜索出原来的`s`，我们要搜索的是中间拼接出来的`s`。
+
+```cpp
+class Solution {
+public:
+    void getNext(int* next, std::string s) {
+        /**
+         * j指向前缀末尾位置
+         * i指向后缀末尾位置
+         */
+        // 1. 初始化next数组
+        int j = 0; // 前缀的末尾一开始就是0
+        next[0] = 0; // 在0的位置就是回退到0
+        // 2. 处理前后缀不相同的情况
+        for (int i = 1; i < s.size(); ++i) {
+            while (j > 0 && s[i] != s[j]) {
+                j = next[j - 1];
+            }
+            // 3. 处理前后缀相同的情况
+            if (s[i] == s[j])
+                j++;
+            // 4. 更新next数组的值
+            next[i] = j;
+        }
+    } //
+    int strStr(std::string haystack, std::string needle) {
+        if (needle.size() == 0)
+            return 0;
+        int* next = (int*)malloc(needle.size() * sizeof(int));
+        // 先构建next数组
+        getNext(next, needle);
+        int j = 0;
+        for (int i = 0; i < haystack.size(); ++i) {
+            // 遇到不匹配，则回退
+            while (j > 0 && haystack[i] != needle[j])
+                j = next[j - 1];
+            if (haystack[i] == needle[j])
+                j++; // 继续匹配
+            if (j == needle.size()) // 匹配到末尾
+                return (i - needle.size() + 1);
+        }
+        free(next);
+        return -1;
+    }
+public:
+    bool repeatedSubstringPattern(string s) {
+        if(s.size() == 1) return false;
+        std::string ss = s + s;
+        std::string ss_  = std::string(ss.begin() + 1, ss.end() - 1); // 去头去尾，防止找到自己
+        return strStr(ss_, s) != -1;
+    }
+};
+```
+
+直接通过了，使用KMP的代码即可。
+
+字符串到此就完结了。
