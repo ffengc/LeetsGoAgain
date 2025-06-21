@@ -7,6 +7,7 @@
   - [有效的括号](#有效的括号)
   - [删除字符串中的所有相邻重复项](#删除字符串中的所有相邻重复项)
   - [逆波兰表达式求值（重要题型：后缀表达式）](#逆波兰表达式求值重要题型后缀表达式)
+  - [滑动窗口最大值](#滑动窗口最大值)
 
 ## 栈和队列理论基础
 
@@ -189,7 +190,45 @@ https://leetcode.cn/problems/evaluate-reverse-polish-notation/description/
 
 ![](https://file1.kamacoder.com/i/algo/150.%E9%80%86%E6%B3%A2%E5%85%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC.gif)
 
+```cpp
+class Solution {
+    using ll = long long;
 
+private:
+    int count(ll a, ll b, char op) {
+        // note: b是第一个操作数
+        switch (op)
+        {
+        case '+': return b + a;
+        case '-': return b - a;
+        case '*': return b * a;
+        case '/': return b / a;
+        default:
+            assert(false);
+        }
+    } //
+public:
+    int evalRPN(std::vector<std::string>& tokens) {
+        std::stack<ll> st;
+        for (const auto& e : tokens) {
+            if (e == "+" || e == "-" || e == "*" || e == "/") {
+                auto a = st.top();
+                st.pop();
+                auto b = st.top();
+                st.pop();
+                st.push(count(a, b, e[0]));
+            } else
+                st.push(std::stoi(e));
+        }
+        assert(st.size() == 1);
+        return st.top();
+    }
+};
+```
 
+顺利通过。
 
+## 滑动窗口最大值
+
+https://leetcode.cn/problems/sliding-window-maximum/
 
