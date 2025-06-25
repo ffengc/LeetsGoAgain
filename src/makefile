@@ -1,4 +1,4 @@
-test:151_reverse_words_in_string.cc
+test:347_Top_K_Frequent_Elements.cc
 	g++ -o $@ $^ -std=c++11 -g
 .PHONY:clean
 clean:
