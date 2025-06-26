@@ -1,6 +1,8 @@
 
 # yufc write for count 
 
+# BUG: 题目会重复，到时候得给名字set一下
+
 def count_problems(filename):
     difficulty_counts = {'简单': 0, '中等': 0, '困难': 0}
     total = 0
