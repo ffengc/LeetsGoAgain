@@ -20,6 +20,15 @@
     - [二叉树的最大深度](#二叉树的最大深度)
     - [二叉树的最小深度](#二叉树的最小深度)
   - [翻转二叉树](#翻转二叉树)
+  - [对称二叉树](#对称二叉树)
+    - [常规方法](#常规方法)
+    - [迭代方法](#迭代方法)
+    - [相同的树](#相同的树)
+    - [另一棵树的子树](#另一棵树的子树)
+  - [二叉树的最大深度](#二叉树的最大深度-1)
+    - [N 叉树的最大深度](#n-叉树的最大深度)
+  - [二叉树的最小深度](#二叉树的最小深度-1)
+  - [完全二叉树的节点个数](#完全二叉树的节点个数)
 
 ## 二叉树理论基础
 
@@ -726,3 +735,300 @@ public:
 ```
 
 ## 翻转二叉树
+
+https://leetcode.cn/problems/invert-binary-tree/
+
+思路：把每一个节点的左右孩子都交换一下，就能完成翻转。
+
+用递归比较好。
+
+```cpp
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root) return nullptr;
+        std::swap(root->left, root->right);
+        invertTree(root->left);
+        invertTree(root->right);
+        return root;
+    }
+};
+```
+
+当然，用栈也是一样的。
+
+```cpp
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root) return nullptr;
+        std::stack<TreeNode*> st;
+        st.push(root);
+        while(!st.empty()) {
+            TreeNode* node = st.top(); // 中
+            st.pop();
+            std::swap(node->left, node->right);
+            if(node->right) st.push(node->right); // 右
+            if(node->left) st.push(node->left); // 左
+        }
+        return root;
+    }
+};
+```
+
+用队列也是一样的！**反正只要能遍历每一个节点的方法，都可以用！** 这里再复习一次层序遍历。
+
+```cpp
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root) return nullptr;
+        std::queue<TreeNode*> q;
+        q.push(root);
+        while(!q.empty()) {
+            int sz = q.size();
+            for(int i = 0; i < sz; ++i) {
+                auto node = q.front();
+                q.pop();
+                std::swap(node->left, node->right);
+                if(node->left) q.push(node->left);
+                if(node->right) q.push(node->right);
+            }
+        }
+        return root;
+    }
+};
+```
+
+## 对称二叉树
+
+### 常规方法
+
+https://leetcode.cn/problems/symmetric-tree/description/
+
+判断一个二叉树是不是对称的。
+
+思路：递归遍历每一个节点，看看是不是左右对称即可。
+
+```cpp
+class Solution {
+private:
+    bool compare(TreeNode* left, TreeNode* right) {
+        if(!left && right) return false; // 设置返回条件
+        if(left && !right) return false; // 设置返回条件
+        if(!left && !right) return true; // 设置返回条件
+        if(left->val != right->val) return false; // 设置返回条件
+        return compare(left->left, right->right) && compare(left->right, right->left); // 继续递归
+    }
+public:
+    bool isSymmetric(TreeNode* root) {
+        if(!root) return true;
+        return compare(root->left, root->right);
+    }
+};
+```
+
+这题也是很好理解的，看看代码就行。
+
+### 迭代方法
+
+![](https://file1.kamacoder.com/i/algo/101.%E5%AF%B9%E7%A7%B0%E4%BA%8C%E5%8F%89%E6%A0%91.gif)
+
+```cpp
+class Solution {
+public:
+    bool isSymmetric(TreeNode* root) {
+        if(!root) return true;
+        std::queue<TreeNode*> q;
+        q.push(root->left);
+        q.push(root->right);
+        while(!q.empty()) {
+            TreeNode* left_node = q.front(); q.pop();
+            TreeNode* right_node = q.front(); q.pop();
+            if(!left_node && right_node) return false; // 设置返回条件
+            if(left_node && !right_node) return false; // 设置返回条件
+            if(!left_node && !right_node ) continue; // 左右节点都为空
+            if(left_node->val != right_node->val) return false;
+            // 这里四个要注意顺序
+            q.push(left_node->left);
+            q.push(right_node->right);
+            q.push(left_node->right);
+            q.push(right_node->left);
+        }
+        return true;
+    }
+};
+```
+
+
+### 相同的树
+
+https://leetcode.cn/problems/same-tree/description/
+
+```cpp
+class Solution {
+private:
+    bool compare(TreeNode* node1, TreeNode* node2) {
+        if(!node1 && !node2) return true;
+        if((node1 && !node2) || (!node1 && node2)) return false;
+        if(node1->val != node2->val) return false;
+        return compare(node1->left, node2->left) && compare(node1->right, node2->right);
+    }
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        return compare(p, q);
+    }
+};
+```
+
+用一个 `bool compare(TreeNode* node1, TreeNode* node2)`, 相同思路，直接解决。
+
+### 另一棵树的子树
+
+https://leetcode.cn/problems/subtree-of-another-tree/description/
+
+
+```cpp
+class Solution {
+private:
+    bool compare(TreeNode* node1, TreeNode* node2) {
+        if(!node1 && !node2) return true;
+        if((node1 && !node2) || (!node1 && node2)) return false;
+        if(node1->val != node2->val) return false;
+        return compare(node1->left, node2->left) && compare(node1->right, node2->right);
+    }
+public:
+    bool isSubtree(TreeNode* root, TreeNode* subRoot) {
+        if(!root && !subRoot) return true;
+        if((root && !subRoot) || (!root && subRoot)) return false;
+        if(compare(root, subRoot)) return true; // note
+        return isSubtree(root->left, subRoot) || isSubtree(root->right, subRoot); // note
+    }
+};
+```
+
+**注意这两行：**
+```cpp
+if(compare(root, subRoot)) return true; // note
+return isSubtree(root->left, subRoot) || isSubtree(root->right, subRoot); // note
+```
+
+**如果两个树相同，就是true，如果不相同，要重新调用 `isSubtree` 而不是重新调用 `compare`，这里要注意。**
+
+
+
+
+
+把队列直接换成栈，其他不用动，也是可以通过的。思考一下就能想明白。
+
+## 二叉树的最大深度
+
+https://leetcode.cn/problems/maximum-depth-of-binary-tree/
+
+```cpp
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if(root == nullptr) return 0;
+        return 1 + std::max(maxDepth(root->left), maxDepth(root->right));
+    }
+};
+```
+
+### N 叉树的最大深度
+
+https://leetcode.cn/problems/maximum-depth-of-n-ary-tree/
+
+```cpp
+class Solution {
+public:
+    int maxDepth(Node* root) {
+        if(root == nullptr) return 0;
+        int _max = 0;
+        for(int i = 0; i < root->children.size(); ++i) {
+            int depth = maxDepth(root->children[i]);
+            if(depth > _max)
+                _max = depth;
+        }
+        return _max + 1;
+    }
+};
+```
+思路和上面是一样的。
+
+## 二叉树的最小深度
+
+https://leetcode.cn/problems/minimum-depth-of-binary-tree/
+
+```cpp
+class Solution {
+public:
+    int minDepth(TreeNode* root) {
+        if(!root) return 0;
+        // 此处要注意，和求最大深度是有区别的。
+        // 要找叶子结点，如果 root->left == null，是不能直接返回depth=1的
+        if(root->left == nullptr && root->right) return 1 + minDepth(root->right);
+        if(root->right == nullptr && root->left) return 1 + minDepth(root->left);
+        return 1 + std::min(minDepth(root->left), minDepth(root->right));
+    }
+};
+```
+
+**NOTE: 要找叶子结点，如果 root->left == null，是不能直接返回depth=1的。**
+
+![](https://file1.kamacoder.com/i/algo/111.%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E6%9C%80%E5%B0%8F%E6%B7%B1%E5%BA%A6.png)
+
+如图所示。
+
+## 完全二叉树的节点个数
+
+https://leetcode.cn/problems/count-complete-tree-nodes/description/
+
+这题最无脑的方法肯定就是当普通二叉树来求节点个数即可。
+
+```cpp
+class Solution {
+public:
+    int countNodes(TreeNode* root) {
+        return root==NULL?0:countNodes(root->left)+countNodes(root->right)+1;
+    }
+};
+```
+这里不赘述。
+
+这里来学习一种，利用完全二叉树性质来求的方法。
+
+![](https://file1.kamacoder.com/i/algo/20220829163554.png)
+
+如图所示，在完全二叉树中，如果左右两边深度一样，就一定是满二叉树。
+
+所以可以历经满二叉树的性质直接用公式来求节点个数。
+
+
+```cpp
+class Solution {
+public:
+    int countNodes(TreeNode* root) {
+        if(!root) return 0;
+        TreeNode* left = root->left;
+        TreeNode* right = root->right;
+        int leftDepth = 0, rightDepth = 0;
+        while(left) {
+            left = left -> left;
+            leftDepth++;
+        }
+        while(right) {
+            right = right->right;
+            rightDepth++;
+        }
+        if(leftDepth == rightDepth)
+            return (2 << leftDepth) - 1; // 这里具体怎么写要看 leftDepth, rightDepth 的初始化
+        return countNodes(root->left) + countNodes(root->right) + 1; // 如果不是满二叉树，就找孩子，看看孩子是不是
+        // 反正：不数数，所有节点都是计算得到的（公式），如果以root为根用不了公式，那就找root的孩子看看能不能用公式
+    }
+};
+```
+
+如果不是满二叉树，就找孩子，看看孩子是不是。
+
+反正：不数数，所有节点都是计算得到的（公式），如果以root为根用不了公式，那就找root的孩子看看能不能用公式
