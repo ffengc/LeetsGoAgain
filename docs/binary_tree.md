@@ -29,6 +29,14 @@
     - [N 叉树的最大深度](#n-叉树的最大深度)
   - [二叉树的最小深度](#二叉树的最小深度-1)
   - [完全二叉树的节点个数](#完全二叉树的节点个数)
+  - [平衡二叉树](#平衡二叉树)
+  - [二叉树的所有路径（重要：回溯基本题）](#二叉树的所有路径重要回溯基本题)
+    - [记住！一次递归对应一次回溯（pop）](#记住一次递归对应一次回溯pop)
+  - [左叶子之和](#左叶子之和)
+  - [找树左下角的值](#找树左下角的值)
+    - [层序遍历法](#层序遍历法)
+    - [递归法（有需要注意的点）](#递归法有需要注意的点)
+  - [路径总和](#路径总和)
 
 ## 二叉树理论基础
 
@@ -1031,4 +1039,360 @@ public:
 
 如果不是满二叉树，就找孩子，看看孩子是不是。
 
-反正：不数数，所有节点都是计算得到的（公式），如果以root为根用不了公式，那就找root的孩子看看能不能用公式
+反正：不数数，所有节点都是计算得到的（公式），如果以root为根用不了公式，那就找root的孩子看看能不能用公式。
+
+## 平衡二叉树
+
+https://leetcode.cn/problems/balanced-binary-tree/description/
+
+```cpp
+class Solution {
+private:
+    int height(TreeNode* node) {
+        /**
+        * 如果以node为root的树是平衡树，则返回这棵树的高度
+        * 如果不是平衡树，则不返回高度，返回-1
+        */
+        if(node == nullptr) return 0;
+        int left = height(node->left);
+        int right = height(node->right);
+        if(left == -1) return -1;
+        if(right == -1) return -1;
+        return abs(left - right) > 1 ? -1 : 1 + std::max(left, right);
+    }
+public:
+    bool isBalanced(TreeNode* root) {
+        // 首先，肯定是求左右高度的，如果左右高度超过-1，返回false就行
+        return height(root) == -1 ? false : true; // height函数如果返回-1，则表示不平衡，如果返回其他，表示树的高度
+    }
+};
+```
+
+此题的关键就是这个 `height` 函数。
+- `height`函数：如果以node为root的树是平衡树，则返回这棵树的高度。如果不是平衡树，则不返回高度，返回-1。
+
+如果用迭代法就比较复杂了。虽然理论上所有的递归都可以用迭代来实现，但是有的场景难度可能比较大。当然此题用迭代法，其实效率很低，因为没有很好的模拟回溯的过程，所以迭代法有很多重复的计算。
+
+## 二叉树的所有路径（重要：回溯基本题）
+
+https://leetcode.cn/problems/binary-tree-paths/description/
+
+给你一个二叉树的根节点 root ，按 任意顺序 ，返回所有从根节点到叶子节点的路径。叶子节点 是指没有子节点的节点。
+
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> all_paths;
+    std::vector<int> paths;
+    void dfs(TreeNode* node) {
+        paths.push_back(node->val);
+        if (node->left == nullptr && node->right == nullptr) {
+            // 遇到叶子节点了
+            all_paths.push_back(paths);
+            return;
+        }
+        if (node->left) {
+            dfs(node->left);
+            // note: 一个递归配一个回溯
+            paths.pop_back();
+        }
+        if (node->right) {
+            dfs(node->right);
+            paths.pop_back();
+        }
+    } //
+    std::vector<std::string> vec2string() {
+        std::vector<std::string> res;
+        for(int i = 0; i < all_paths.size(); ++i) {
+            auto path = all_paths[i];
+            std::string str;
+            for(int j = 0; j < path.size(); ++j) {
+                str += std::to_string(path[j]);
+                if(j != path.size() - 1)
+                    str += "->";
+            }
+            res.push_back(str);
+        }
+        return res;
+    }
+private:
+    void debug_print() {
+        for(const auto& e : all_paths) {
+            for(const auto& ee : e) {
+                std::cout << ee << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+public:
+    std::vector<std::string> binaryTreePaths(TreeNode* root) {
+        // 最后再处理成字符串吧，处理成字符串不是重点
+        // 先用一个 std::vector<std::vector<int>> 存
+        if (!root)
+            return {};
+        std::vector<std::vector<int>> all_paths;
+        dfs(root);
+        return vec2string();
+    }
+};
+```
+
+**这一份回溯的代码非常重要！需要记住！**
+
+特别是这一部分：
+```cpp
+void dfs(TreeNode* node) {
+    paths.push_back(node->val);
+    if (node->left == nullptr && node->right == nullptr) {
+        // 遇到叶子节点了
+        all_paths.push_back(paths);
+        return;
+    }
+    if (node->left) {
+        dfs(node->left);
+        // note: 一个递归配一个回溯
+        paths.pop_back();
+    }
+    if (node->right) {
+        dfs(node->right);
+        paths.pop_back();
+    }
+} //
+```
+### 记住！一次递归对应一次回溯（pop）
+
+**记住！一次递归对应一次回溯（pop）。**
+
+## 左叶子之和
+
+https://leetcode.cn/problems/sum-of-left-leaves/description/
+
+先自己尝试写一下吧。
+
+```cpp
+class Solution {
+private:
+    int sum = 0;
+    void dfs(TreeNode* node) {
+        if(node == nullptr) assert(false); // 通过后面的判断，不应该走到这
+        auto left_node = node->left;
+        auto right_node = node->right;
+        if(left_node && check_is_leaf(left_node))
+            sum+=left_node->val;
+        if(left_node) dfs(left_node);
+        if(right_node) dfs(right_node);        
+    }
+    bool check_is_leaf(TreeNode* node) {
+        if(!node)
+            return false; // null不是叶子节点, 当然, 不会走到这
+        return node->left == nullptr && node->right == nullptr;
+    }
+public:
+    int sumOfLeftLeaves(TreeNode* root) {
+        if(!root) return 0;
+        dfs(root);
+        return sum;
+    }
+};
+```
+
+顺利通过，我利用 `check_is_leaf` 来判断这个节点是否是一个叶子结点。
+
+给一个 Carl 版本的精简答案。
+
+```cpp
+class Solution {
+public:
+    int sumOfLeftLeaves(TreeNode* root) {
+        if (root == NULL) return 0;
+        int leftValue = 0;
+        if (root->left != NULL && root->left->left == NULL && root->left->right == NULL) {
+            leftValue = root->left->val; // 这里走进来的都是左叶子结点
+        }
+        return leftValue + sumOfLeftLeaves(root->left) + sumOfLeftLeaves(root->right);
+    }
+};
+```
+
+其实就是用 `leftValue + sumOfLeftLeaves(root->left) + sumOfLeftLeaves(root->right);` 代替了递归的过程，其实本质是一样的。
+
+但是我个人觉得，写一个 `dfs` 函数，是非常清晰的，后面很多题目，我都会去写这个 `dfs` 函数。
+
+## 找树左下角的值
+
+https://leetcode.cn/problems/find-bottom-left-tree-value/description/
+
+给定一个二叉树的 根节点 root，请找出该二叉树的 最底层 最左边 节点的值。假设二叉树中至少有一个节点。
+
+![](https://assets.leetcode.com/uploads/2020/12/14/tree2.jpg)
+
+输入: [1,2,3,4,null,5,6,null,null,7] \
+输出: 7
+
+先自己尝试写一下。
+
+### 层序遍历法
+
+**这题用层序遍历应该是秒了。**
+
+先写一个层序遍历的版本，顺便复习一下层序遍历。
+
+```cpp
+class Solution {
+public:
+    int findBottomLeftValue(TreeNode* root) {
+        if(!root) assert(false); // 题目说了这种情况不可能出现
+        std::queue<TreeNode*> q;
+        std::vector<int> layer;
+        q.push(root);
+        while(!q.empty()) {
+            int sz = q.size();
+            layer.clear(); // 清空 layer 数组
+            for(int i = 0; i < sz; ++i) {
+                auto node = q.front();
+                q.pop();
+                layer.push_back(node->val);
+                if(node->left) q.push(node->left);
+                if(node->right) q.push(node->right);
+            }
+        }
+        return layer[0];
+    }
+};
+```
+
+顺利通过。
+
+再看看递归的方法。
+
+### 递归法（有需要注意的点）
+
+这一题递归的解法中，有非常多需要注意的地方。
+
+1. 我们需要的是，最深的那一层的，最左侧的那个节点的值。
+   - **调用dfs，第一个访问到的，就是最左边的！** 这个就是结论，所以我们只需要按照正常dfs去访问节点就行！
+   - 因此，只有 `cur_depth > max_depth` 才更新，不能是 `cur_depth >= max_depth` ！
+
+
+```cpp
+class Solution {
+private:
+    int max_depth = INT_MIN;
+    int cur_depth = 0;
+    int result = 0;
+    void dfs(TreeNode* node) {
+        if(cur_depth > max_depth) {
+            // 只能是 > 不能是 >=
+            max_depth = cur_depth;
+            result = node->val;
+        }
+        if(!node->left && !node->right) return; // 遇到叶子
+        if(node->left) {
+            cur_depth++;
+            dfs(node->left);
+            cur_depth--; // 回溯
+        }
+        if(node->right) {
+            cur_depth++;
+            dfs(node->right);
+            cur_depth--; // 回溯
+        }
+    }
+public:
+    int findBottomLeftValue(TreeNode* root) {
+        dfs(root);
+        return result;
+    }
+};
+```
+
+直接通过了，所以`dfs`这个函数是核心中的核心！
+
+
+## 路径总和
+
+https://leetcode.cn/problems/path-sum/description/
+
+![](https://assets.leetcode.com/uploads/2021/01/18/pathsum1.jpg)
+
+输入：root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22 \
+输出：true \
+解释：等于目标和的根节点到叶节点路径如上图所示。 
+
+
+回溯所有路径就行了。
+
+```cpp
+class Solution {
+private:
+    std::vector<int> path;
+    bool flag = false;
+    void dfs(TreeNode* root, int targetSum) {
+        if(flag == true) return; // 剪枝
+        path.push_back(root->val);
+        if(!root->left && !root->right) {
+            int sum = std::accumulate(path.begin(), path.end(), 0);
+            if(sum == targetSum) flag = true; // 如果符合，则调整为true
+            return;
+        }
+        if(root->left) {
+            dfs(root->left, targetSum);
+            path.pop_back(); // 回溯
+        }
+        if(root->right) {
+            dfs(root->right, targetSum);
+            path.pop_back(); // 回溯
+        }
+    }
+public:
+    bool hasPathSum(TreeNode* root, int targetSum) {
+        if(!root) return false; // 题目说明了这种情况
+        dfs(root, targetSum);
+        return flag;
+    }
+};
+```
+
+顺利通过，这种回溯路径的题目是很经典的，后面很多时候都会遇到类似的。
+
+在代码里面，我设置了，一遇到 `flag == true` 直接剪枝返回即可。
+
+
+
+这里是相似的一道题 [113. 路径总和 II](https://leetcode.cn/problems/path-sum-ii/description/)
+
+给你二叉树的根节点 root 和一个整数目标和 targetSum ，找出所有 从根节点到叶子节点 路径总和等于给定目标和的路径。
+
+和上一题没有任何区别，但是，这题不能剪枝了，因为题目要找所有符合条件的路径。
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> all_paths;
+    std::vector<int> path;
+    void dfs(TreeNode* root, int targetSum) {
+        path.push_back(root->val);
+        if(!root->left && !root->right) {
+            int sum = std::accumulate(path.begin(), path.end(), 0);
+            if(sum == targetSum) all_paths.push_back(path); // 这里稍微调整即可
+            return;
+        }
+        if(root->left) {
+            dfs(root->left, targetSum);
+            path.pop_back(); // 回溯
+        }
+        if(root->right) {
+            dfs(root->right, targetSum);
+            path.pop_back(); // 回溯
+        }
+    }
+public:
+    vector<vector<int>> pathSum(TreeNode* root, int targetSum) {
+        if(!root) return {}; // 题目说明了这种情况
+        dfs(root, targetSum);
+        return all_paths;
+    }
+};
+```
+
