@@ -1,4 +1,4 @@
-test:347_Top_K_Frequent_Elements.cc
+test:test2.cc
 	g++ -o $@ $^ -std=c++11 -g
 .PHONY:clean
 clean:
