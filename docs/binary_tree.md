@@ -37,6 +37,13 @@
     - [层序遍历法](#层序遍历法)
     - [递归法（有需要注意的点）](#递归法有需要注意的点)
   - [路径总和](#路径总和)
+  - [从中序与后序遍历序列构造二叉树（重要题型）](#从中序与后序遍历序列构造二叉树重要题型)
+    - [思路和分析](#思路和分析)
+    - [完整实现代码](#完整实现代码)
+    - [可以优化的地方](#可以优化的地方)
+    - [从前序与中序遍历序列构造二叉树（重要题型）](#从前序与中序遍历序列构造二叉树重要题型)
+    - [前序+后序能确定一棵二叉树吗？](#前序后序能确定一棵二叉树吗)
+  - [最大二叉树](#最大二叉树)
 
 ## 二叉树理论基础
 
@@ -1395,4 +1402,247 @@ public:
     }
 };
 ```
+
+## 从中序与后序遍历序列构造二叉树（重要题型）
+
+https://leetcode.cn/problems/construct-binary-tree-from-inorder-and-postorder-traversal/description/
+
+### 思路和分析
+
+首先给两个序列。
+
+inorder = [9,3,15,20,7], postorder = [9,15,7,20,3]
+
+后序最后一个数是3，说明3就是树的根！因为3肯定是最后访问。
+
+**然后在中序里面，3的左边是9，3的右边是15，20，7。
+表明9就是3的左子树，15，20，7就是3的右子树。**
+
+所以代码的步骤可以是这样的：
+
+- 第一步：如果数组大小为零的话，说明是空节点了。
+- 第二步：如果不为空，那么取后序数组最后一个元素作为节点元素。
+- 第三步：找到后序数组最后一个元素在中序数组的位置，作为切割点
+- 第四步：切割中序数组，切成中序左数组和中序右数组 （顺序别搞反了，一定是先切中序数组）
+- 第五步：切割后序数组，切成后序左数组和后序右数组
+- 第六步：递归处理左区间和右区间
+
+不难写出下面这个代码结构。
+
+```cpp
+TreeNode* traveral(std::vector<int>& inorder, std::vector<int>& postorder) {
+    // 第一步
+    if (postorder.size() == 0)
+        return nullptr;
+    // 第二步
+    int rootValue = postorder[postorder.size() - 1];
+    TreeNode* root = new TreeNode(rootValue);
+    // 叶子节点
+    if(postorder.size() == 1) return root;
+    // 第三步：寻找切割点
+    int delimiterIndex;
+    for(delimiterIndex = 0; delimiterIndex < inorder.size(); delimiterIndex++) {
+        if(inorder[delimiterIndex] == rootValue) break;
+    }
+    // 第四步：切割中序数组，得到中序左数组和中序右数组
+    // 第五步：切割后序数组，得到后序左数组和后序右数组
+    root->left = traveral(/*中序左数组*/, /*中序右数组*/);
+    root->right = traveral(/*后序左数组*/, /*后序右数组*/);
+}
+```
+
+中序数组相对比较好切，找到切割点（后序数组的最后一个元素）在中序数组的位置，然后切割。
+
+中序切割很好理解，比如上面那个例子。
+
+inorder = [9,3,15,20,7], postorder = [9,15,7,20,3]
+
+第一次是以3为切割点，所以中序左数组就是 [9], 中序右数组就是 [15, 20, 7]。
+
+```cpp
+// 找到中序遍历的切割点
+int delimiterIndex;
+for (delimiterIndex = 0; delimiterIndex < inorder.size(); delimiterIndex++) {
+    if (inorder[delimiterIndex] == rootValue) break;
+}
+
+// 左闭右开区间：[0, delimiterIndex)
+vector<int> leftInorder(inorder.begin(), inorder.begin() + delimiterIndex);
+// [delimiterIndex + 1, end)
+vector<int> rightInorder(inorder.begin() + delimiterIndex + 1, inorder.end() );
+```
+
+后序切割其实也不难。
+
+inorder = [9,3,15,20,7], postorder = [9,15,7,20,3]
+
+中序左数组就是 [9], 中序右数组就是 [15, 20, 7]
+
+首先第一步，先把3去掉，3已经用过了。
+
+此时 postorder=[9,15,7,20]
+
+后序左数组，就是从数组开头，数`leftInorder.size()`个数, 也就是数一个。
+
+后序右数组，就是从第`leftInorder.size()+1`个开始数，到结尾。
+
+可以写出下面这份代码。
+
+```cpp
+// postorder 舍弃末尾元素，因为这个元素就是中间节点，已经用过了
+postorder.resize(postorder.size() - 1);
+
+// 左闭右开，注意这里使用了左中序数组大小作为切割点：[0, leftInorder.size)
+vector<int> leftPostorder(postorder.begin(), postorder.begin() + leftInorder.size());
+// [leftInorder.size(), end)
+vector<int> rightPostorder(postorder.begin() + leftInorder.size(), postorder.end());
+```
+
+### 完整实现代码
+
+```cpp
+class Solution {
+private:
+    TreeNode* traveral(std::vector<int>& inorder, std::vector<int>& postorder) {
+        if(postorder.size() == 0) return nullptr;
+        int rootValue = postorder[postorder.size()-1]; // 当前节点就是后序最后一个节点
+        TreeNode* root = new TreeNode(rootValue); // 构建新节点
+        // 叶子结点
+        if(postorder.size() == 1) return root; // 此时的root已经是叶子结点了
+        // 找到中序的切割点
+        int delimiterIndex = -1;
+        for(delimiterIndex = 0; delimiterIndex < inorder.size(); ++delimiterIndex) {
+            if(inorder[delimiterIndex] == rootValue) break;
+        }
+        // 切割中序数组
+        std::vector<int> leftInorder(inorder.begin(), inorder.begin() + delimiterIndex);
+        std::vector<int> rightInorder(inorder.begin()+delimiterIndex+1, inorder.end());
+        assert(leftInorder.size() + rightInorder.size() == postorder.size()-1);
+        // 切割后序数组
+        postorder.pop_back(); // 去掉最后一个元素（rootValu）
+        std::vector<int> leftPostorder(postorder.begin(), postorder.begin()+leftInorder.size());
+        std::vector<int> rightPostorder(postorder.begin()+leftInorder.size(), postorder.end());
+
+        root->left = traveral(leftInorder, leftPostorder);
+        root->right = traveral(rightInorder, rightPostorder);
+        return root;
+    }
+public:
+    TreeNode* buildTree(vector<int>& inorder, vector<int>& postorder) {
+        if(inorder.size() == 0 || postorder.size() == 0) return nullptr;
+        return traveral(inorder, postorder);
+    }
+};
+```
+
+### 可以优化的地方
+
+当然，像上面那样肯定是最好理解的，但是重新构建新 `vector` 肯定是效率不高的，所以其实就永远来的数组，然后用下标来表示新数组，是更好的。
+
+**这道题的主要是要学会这个思路。关于下标/迭代器区间的处理，我个人是比较熟练的，因此我觉得，只要在草稿纸上分析过，下标注意一下，应该是不会有问题的。**
+
+### 从前序与中序遍历序列构造二叉树（重要题型）
+
+https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description/
+
+这道题的思路和上面那个题是一样的，这里就写下这道题，当作上道题的巩固。
+
+然后这道题尝试用指针的方法去做，这样更好。
+
+我用了迭代器。
+
+```cpp
+class Solution {
+private:
+    using itType = std::vector<int>::iterator;
+    TreeNode* traveral(const std::vector<int>& preorder, const std::vector<int>& inorder,
+        itType leftPreorderIndex, itType rightPreorderIndex, itType leftInorderIndex, itType rightInorderIndex) {
+        if(rightPreorderIndex - leftPreorderIndex == 0) return nullptr; // 没有节点
+        int rootValue = *leftPreorderIndex; // 第一个数组就是要找的
+        TreeNode* root = new TreeNode(rootValue); // 此时的根
+        
+        if(rightPreorderIndex - leftPreorderIndex == 1) return root; // 此时的root是叶子节点
+        itType delimiterIndex;
+        for(delimiterIndex = leftInorderIndex; delimiterIndex != rightInorderIndex; delimiterIndex++)
+            if(*delimiterIndex == rootValue) break;
+        // 此时 delimiterIndex 指向中序的切割点
+
+        // 切割中序数组
+        itType left_leftInorderIndex = leftInorderIndex;
+        itType right_leftInorderIndex = delimiterIndex;
+        itType left_rightInorderIndex = delimiterIndex + 1;
+        itType right_rightInorderIndex = rightInorderIndex;
+        // 切割前序数组
+        leftPreorderIndex++; // pop_front 一下
+        itType left_leftPreorderIndex = leftPreorderIndex;
+        itType right_leftPreorderIndex = leftPreorderIndex + (right_leftInorderIndex - left_leftInorderIndex);
+        itType left_rightPreorderIndex = leftPreorderIndex + (right_leftInorderIndex - left_leftInorderIndex);
+        itType right_rightPreorderIndex = rightPreorderIndex;
+        // 递归
+        root->left = traveral(preorder, inorder, left_leftPreorderIndex, right_leftPreorderIndex, left_leftInorderIndex, right_leftInorderIndex);
+        root->right = traveral(preorder, inorder, left_rightPreorderIndex, right_rightPreorderIndex, left_rightInorderIndex, right_rightInorderIndex);
+        return root;
+    } //
+public:
+    TreeNode* buildTree(std::vector<int>& preorder, std::vector<int>& inorder) {
+        if (preorder.size() == 0 || inorder.size() == 0)
+            return nullptr;
+        return traveral(preorder, inorder, preorder.begin(), preorder.end(), inorder.begin(), inorder.end());
+    }
+};
+```
+顺利通过。
+
+这道两道题是需要复习的！
+
+
+### 前序+后序能确定一棵二叉树吗？
+
+前序和后序不能唯一确定一棵二叉树！，因为没有中序遍历无法确定左右部分，也就是无法分割。
+
+举一个例子：
+
+![](https://file1.kamacoder.com/i/algo/20210203154720326.png)
+
+## 最大二叉树
+
+https://leetcode.cn/problems/maximum-binary-tree/description/
+
+给定一个不重复的整数数组 `nums` 。 最大二叉树 可以用下面的算法从 `nums` 递归地构建:
+
+- 创建一个根节点，其值为 `nums` 中的最大值。
+- 递归地在最大值 左边 的 子数组前缀上 构建左子树。
+- 递归地在最大值 右边 的 子数组后缀上 构建右子树。
+
+这题不是和105, 106那两题完全一样的方法去构造不就可以了。直接写代码。
+
+```cpp
+class Solution {
+private:
+    using iterator = std::vector<int>::iterator;
+    TreeNode* build(const std::vector<int>& nums, iterator left, iterator right) {
+        if(right - left == 0) return nullptr;
+        iterator maxValueIndex = std::max_element(left, right); // 找到最大值的索引
+        TreeNode* root = new TreeNode(*maxValueIndex); // 构建节点
+        
+        // 左子数组
+        iterator leftLeft = left;
+        iterator rightLeft = maxValueIndex;
+        // 右子数组
+        iterator leftRight = maxValueIndex + 1;
+        iterator rightRight = right;
+
+        root->left = build(nums, leftLeft, rightLeft); // 递归
+        root->right = build(nums, leftRight, rightRight); // 递归
+        return root;
+    }
+public:
+    TreeNode* constructMaximumBinaryTree(std::vector<int>& nums) {
+        if(nums.size() == 0) return nullptr;
+        return build(nums, nums.begin(), nums.end());
+    }
+};
+```
+
+顺利通过。
 

@@ -88,3 +88,18 @@
 
 二叉树结束之后，需要复习一下之前的内容。
 
+## 仓库Git历史
+
+```mermaid
+gitGraph
+    commit
+    commit
+    branch develop
+    checkout develop
+    commit
+    commit
+    checkout main
+    merge develop
+    commit
+    commit
+```
