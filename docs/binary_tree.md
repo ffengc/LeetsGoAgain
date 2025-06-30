@@ -44,6 +44,12 @@
     - [从前序与中序遍历序列构造二叉树（重要题型）](#从前序与中序遍历序列构造二叉树重要题型)
     - [前序+后序能确定一棵二叉树吗？](#前序后序能确定一棵二叉树吗)
   - [最大二叉树](#最大二叉树)
+  - [合并二叉树](#合并二叉树)
+  - [二叉搜索树中的搜索](#二叉搜索树中的搜索)
+  - [验证二叉搜索树](#验证二叉搜索树)
+  - [二叉搜索树的最小绝对差](#二叉搜索树的最小绝对差)
+  - [二叉搜索树中的众数](#二叉搜索树中的众数)
+  - [二叉树的最近公共祖先](#二叉树的最近公共祖先)
 
 ## 二叉树理论基础
 
@@ -1645,4 +1651,233 @@ public:
 ```
 
 顺利通过。
+
+## 合并二叉树
+
+https://leetcode.cn/problems/merge-two-binary-trees/description/
+
+先自己尝试写代码。
+
+```cpp
+class Solution {
+public:
+    TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+        if(!root1 && !root2) return nullptr;
+        else if(!root1 && root2) return root2;
+        else if(root1 && !root2) return root1;
+        else if(root1 && root2) {
+            TreeNode* new_node = new TreeNode(root1->val+root2->val);
+            new_node->left = mergeTrees(root1->left, root2->left);
+            new_node->right = mergeTrees(root1->right, root2->right);
+            return new_node;
+        }
+        assert(false);
+        return nullptr;
+    }
+};
+```
+
+顺利通过啊，很简单，分情况就行了。如果一边为空，则返回另一边就行了。
+
+开始找到大一时候的感觉了。
+
+## 二叉搜索树中的搜索
+
+https://leetcode.cn/problems/search-in-a-binary-search-tree/description/
+
+这题就是搜索树的查找，很简单。当然这份代码很重要，后面很多时候都要用，要写好一点。
+
+```cpp
+class Solution {
+public:
+    TreeNode* searchBST(TreeNode* root, int val) {
+        if(!root) return nullptr;
+        TreeNode* cur = root;
+        while(cur) {
+            if(cur->val == val) return cur;
+            else if(cur->val > val) cur = cur->left;
+            else if(cur->val < val) cur = cur->right;
+        }
+        return nullptr;
+    }
+};
+```
+
+**进入搜索树的题目范畴了，就不要轻易递归了，迭代肯定是最快的，毕竟后面红黑树，AVL都是基于此！（个人总结）**
+
+
+## 验证二叉搜索树
+
+https://leetcode.cn/problems/validate-binary-search-tree/description/
+
+**中序遍历下，输出的二叉搜索树节点的数值是有序序列！**
+
+所以这题就好好复习下中序遍历的各种写法。
+
+递归法：
+
+```cpp
+class Solution {
+private:
+    std::vector<int> vec;
+    void dfs(TreeNode* root) {
+        if(!root) return;
+        dfs(root->left);
+        vec.push_back(root->val);
+        dfs(root->right);
+    }
+public:
+    bool isValidBST(TreeNode* root) {
+        if(!root) return true;
+        dfs(root);
+        return std::is_sorted(vec.begin(), vec.end()) && std::set<int>(vec.begin(), vec.end()).size() == vec.size();
+    }
+};
+```
+
+```cpp
+return std::is_sorted(vec.begin(), vec.end()) && std::set<int>(vec.begin(), vec.end()).size() == vec.size();
+```
+我用这个方法来判断是否有重复值，这样效率一般。不过这不是本题的重点。
+
+
+
+利用stack来进行深度优先遍历。
+```cpp
+class Solution {
+private:
+    std::vector<int> vec;
+    void dfs_by_stack(TreeNode* root) {
+        std::stack<TreeNode*> st;
+        st.push(root);
+        while(!st.empty()) {
+            auto node = st.top();
+            if(node) {
+                st.pop(); // 先弹出这个节点，避免重复操作
+                // 中序需要 左 中 右
+                // 因此按照 右 中 左 的顺序处理
+                if(node->right) st.push(node->right);
+                st.push(node);
+                st.push(nullptr);
+                if(node->left) st.push(node->left);
+            } else if(node == nullptr) {
+                // 遇到null了
+                st.pop();
+                node = st.top();
+                st.pop();
+                vec.push_back(node->val); // 处理这个节点，这个节点被null标记，可以处理
+            }
+        }
+    }
+public:
+    bool isValidBST(TreeNode* root) {
+        if(!root) return true;
+        dfs_by_stack(root);
+        return std::is_sorted(vec.begin(), vec.end()) && std::set<int>(vec.begin(), vec.end()).size() == vec.size();
+    }
+};
+```
+
+## 二叉搜索树的最小绝对差
+
+https://leetcode.cn/problems/minimum-absolute-difference-in-bst/
+
+给你一个二叉搜索树的根节点 root ，返回 树中任意两不同节点值之间的最小差值 。
+
+![](https://assets.leetcode.com/uploads/2021/02/05/bst1.jpg)
+
+输入：root = [4,2,6,1,3]
+输出：1
+
+我的思路是，遍历不就好了？那就是求有序数组的最小差值。
+
+送分题。
+
+直接写代码：
+
+```cpp
+class Solution {
+private:
+    std::vector<int> vec;
+    void dfs(TreeNode* root) {
+        if(!root) return;
+        dfs(root->left);
+        vec.push_back(root->val);
+        dfs(root->right);
+    }
+public:
+    int getMinimumDifference(TreeNode* root) {
+        if (!root) assert(false); // 题目说了至少两个节点
+        dfs(root);
+        int diff = INT_MAX;
+        for(int i = 1; i < vec.size(); ++i) {
+            int cur_diff = vec[i] - vec[i-1];
+            diff = std::min(cur_diff, diff);
+        }
+        return diff;
+    }
+};
+```
+顺利通过。
+
+当然，现在是遍历两遍。也可以优化成遍历一遍的，在中序遍历的时候，就把最小差值记下来就行了。
+
+## 二叉搜索树中的众数
+
+https://leetcode.cn/problems/find-mode-in-binary-search-tree/
+
+给你一个含重复值的二叉搜索树（BST）的根节点 root ，找出并返回 BST 中的所有 众数（即，出现频率最高的元素）。
+
+**如果树中有不止一个众数，可以按 任意顺序 返回。**
+
+刚才上面那题说了，可以只遍历一次的，利用搜索树的性质。
+
+所以这里用两个指针记录一下就行了。
+
+```cpp
+class Solution {
+private:
+    TreeNode* prev = nullptr; // 记录上一个遍历上一个节点的指针
+    int count = 0; // 记录当前遍历到的节点的频率
+    int maxCount = 0; // 记录最大频率
+    std::vector<int> res;
+    void dfs(TreeNode* root) {
+        if(!root) return;
+        dfs(root->left);
+        /* ------------- 逻辑处理 ------------- */
+        if(prev == nullptr)
+            // 算法开头，刚开始遍历树的第一个节点
+            count = 1;
+        else if(prev && prev->val == root->val)
+            count++; // 当前节点和上个节点值相同
+        else if(prev && prev->val != root->val)
+            count = 1; // 刷新一下
+
+        if(count == maxCount)
+            // 按照题目要求：如果树中有不止一个众数，可以按 任意顺序 返回。
+            res.push_back(root->val);
+        if(count > maxCount) {
+            maxCount = count;
+            res.clear(); // 刷新结果
+            res.push_back(root->val);
+        }
+        prev = root; // 迭代
+        /* ------------- 逻辑处理 ------------- */
+        dfs(root->right);
+    }
+public:
+    vector<int> findMode(TreeNode* root) {
+        dfs(root);
+        return res;
+    }
+};
+```
+
+顺利通过。
+
+其实很简单，反正就是在两个 `dfs` 调用之间来操作，就是中序。
+
+## 二叉树的最近公共祖先
+
+https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/
 
