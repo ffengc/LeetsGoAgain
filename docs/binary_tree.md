@@ -49,7 +49,12 @@
   - [验证二叉搜索树](#验证二叉搜索树)
   - [二叉搜索树的最小绝对差](#二叉搜索树的最小绝对差)
   - [二叉搜索树中的众数](#二叉搜索树中的众数)
-  - [二叉树的最近公共祖先](#二叉树的最近公共祖先)
+  - [二叉树的最近公共祖先（需要复习）](#二叉树的最近公共祖先需要复习)
+  - [二叉搜索树的最近公共祖先](#二叉搜索树的最近公共祖先)
+  - [二叉搜索树中的插入操作](#二叉搜索树中的插入操作)
+  - [删除二叉搜索树中的节点（难）](#删除二叉搜索树中的节点难)
+    - [普通二叉树的删除](#普通二叉树的删除)
+  - [修剪二叉树](#修剪二叉树)
 
 ## 二叉树理论基础
 
@@ -1877,7 +1882,256 @@ public:
 
 其实很简单，反正就是在两个 `dfs` 调用之间来操作，就是中序。
 
-## 二叉树的最近公共祖先
+## 二叉树的最近公共祖先（需要复习）
 
 https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/
+
+这题其实有点难，一开始老想不明白。
+
+这次看了Carl的视频讲解是看明白了。
+
+比如一棵树：
+
+        8
+      3   12
+    1 6  11 13
+
+遍历节点，然后写一个函数，判断p,q节点是不是在子树中
+
+比如p,q是1和6，那么回溯到3的时候，两边都是非空的，这样就把3继续返回。
+
+到8的时候，左边不为空，右边为空。所以此时继续返回下面的3。这就得到最后的结果了。因此我先尝试自己写写代码。
+
+```cpp
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(!root) return nullptr;
+        if(root == p || root == q) return root;
+        if(root->left == p && root->right == q) return root;
+        if(root->right == p && root->left == q) return root;
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+        if(left && right) return root; // 这个是公共祖先
+        if(!left && right) return right; 
+        if(left && !right) return left;
+        return nullptr;
+    }
+};
+```
+搞清楚思路后直接通过了。
+
+
+## 二叉搜索树的最近公共祖先
+
+https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-search-tree/description/
+
+这题肯定是要好好利用搜索树的性质的。
+
+我自己先想想，很明显是可以用二叉搜索树二分查找那个性质的。
+
+```cpp
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(!root) return nullptr;
+        if(root ==p || root == q) return root;
+        if(root->val > p->val && root->val < q->val) return root;
+        else if(root->val < p->val && root->val > q->val) return root;
+        else if(root->val > p->val && root->val > q->val) return lowestCommonAncestor(root->left, p, q);
+        else if(root->val < p->val && root->val < q->val) return lowestCommonAncestor(root->right, p, q);
+        return nullptr;
+    }
+};
+```
+
+比大小就行，顺利通过。
+
+当然，Carl的做法更精简一点。
+
+```cpp
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (root->val > p->val && root->val > q->val) {
+            return lowestCommonAncestor(root->left, p, q);
+        } else if (root->val < p->val && root->val < q->val) {
+            return lowestCommonAncestor(root->right, p, q);
+        } else return root;
+    }
+};
+```
+
+因为除了两个递归的情况，其他情况都是返回root的。
+
+
+## 二叉搜索树中的插入操作
+
+给定二叉搜索树（BST）的根节点 root 和要插入树中的值 value ，将值插入二叉搜索树。 返回插入后二叉搜索树的根节点。 输入数据 保证 ，新值和原始二叉搜索树中的任意节点值都不同。
+
+注意，可能存在多种有效的插入方式，只要树在插入后仍保持为二叉搜索树即可。 你可以返回 任意有效的结果。
+
+https://leetcode.cn/problems/insert-into-a-binary-search-tree/description/
+
+这题真的是之前手搓红黑树时必会的。
+
+先自己写。
+
+```cpp
+class Solution {
+public:
+    TreeNode* insertIntoBST(TreeNode* root, int val) {
+        if(!root)
+            return new TreeNode(val);
+        // 肯定是要插入到叶子上的
+        TreeNode* cur = root;
+        TreeNode* pre = nullptr;
+        while(cur) {
+            pre = cur; // 记录 pre
+            if(cur->val > val) cur = cur->left;
+            else if(cur->val < val) cur = cur->right;
+            else if(cur->val == val) assert(false);
+        }
+        // 此时 cur 是一个叶子节点
+        if(pre->val > val) pre->left = new TreeNode(val);
+        if(pre->val < val) pre->right = new TreeNode(val);
+        return root;
+    }
+};
+```
+
+顺利通过。
+
+## 删除二叉搜索树中的节点（难）
+
+https://leetcode.cn/problems/delete-node-in-a-bst/description/
+
+情况比较复杂，分清楚情况就可以了。
+
+- 第一种情况：没找到删除的节点，遍历到空节点直接返回了找到删除的节点
+- 第二种情况：左右孩子都为空（叶子节点），直接删除节点， 返回NULL为根节点
+- 第三种情况：删除节点的左孩子为空，右孩子不为空，删除节点，右孩子补位，返回右孩子为根节点
+- 第四种情况：删除节点的右孩子为空，左孩子不为空，删除节点，左孩子补位，返回左孩子为根节点
+- 第五种情况：左右孩子节点都不为空，则将删除节点的左子树头结点（左孩子）放到删除节点的右子树的最左面节点的左孩子上，返回删除节点右孩子为新的根节点。
+
+第五种比较难理解：如动画所示即可。
+
+![](https://file1.kamacoder.com/i/algo/450.%E5%88%A0%E9%99%A4%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91%E4%B8%AD%E7%9A%84%E8%8A%82%E7%82%B9.gif)
+
+每一种情况都自己画画图就都能理解了。
+
+无论是迭代还是递归，都是分清楚这5种情况即可。
+
+照着这个思路尝试写下代码。
+
+```cpp
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if(!root) return nullptr;
+        // 找要删除的节点
+        TreeNode* cur = root;
+        TreeNode* parent = nullptr;
+        while(cur) {
+            if(cur->val > key) {
+                parent = cur;
+                cur = cur->left;
+            }
+            else if(cur->val < key) {
+                parent = cur;
+                cur = cur->right;
+            }
+            else if(cur->val == key) {
+                // 找到了需要删除的节点
+                // 2. 这个节点是叶子
+                if(!cur->left && !cur->right) {
+                    if(parent == nullptr) {
+                        // 根是要删除的
+                        delete cur;
+                        return nullptr;
+                    }
+                    if(cur == parent->left) parent->left = nullptr;
+                    else if(cur == parent->right) parent->right = nullptr;
+                }
+                // 3. 左孩子为空
+                else if(!cur->left && cur->right) {
+                    if(parent == nullptr) {
+                        // 根是要删除的
+                        auto tmp = cur->right;
+                        delete cur;
+                        return tmp;
+                    }
+                    if(cur == parent->left)
+                        parent->left = cur->right;
+                    else 
+                        parent->right = cur->right;
+                }
+                // 4. 右孩子为空
+                else if(cur->left && !cur->right) {
+                    if(parent == nullptr) {
+                        // 根是要删除的
+                        auto tmp = cur->left;
+                        delete cur;
+                        return tmp;
+                    }
+                    if(cur == parent->left)
+                        parent->left = cur->left;
+                    else 
+                        parent->right = cur->left;
+                }
+                // 5. 左右孩子都不为空
+                else {
+                    // 把cur左子树的所有东西，放到cur右子树的最左边
+                    // 5.1. 先找到cur右子树的最左边
+                    TreeNode* ccur = cur->right;
+                    TreeNode* ppre = nullptr;
+                    while(ccur) {
+                        ppre = ccur;
+                        ccur = ccur->left;
+                    }
+                    // 此时 ppre 就是 cur 右子树的最左节点
+                    assert(ppre->left == nullptr);
+                    ppre->left = cur->left;
+                    if(parent == nullptr) {
+                        // 根是要删除的
+                        auto tmp = cur->right;
+                        delete cur;
+                        return tmp;
+                    }
+                    if(cur == parent->left)
+                        parent->left = cur->right;
+                    else 
+                        parent->right = cur->right;  
+                }
+                delete cur;
+                return root;
+            }
+        }
+        return root; // 1. 没有找到这个节点
+    }
+};
+```
+
+按照思路写确实通过了，不过这题确实不简单。
+
+### 普通二叉树的删除
+
+普通二叉树的删除方式（没有使用搜索树的特性，遍历整棵树），用交换值的操作来删除目标节点。
+
+代码中目标节点（要删除的节点）被操作了两次：
+
+- 第一次是和目标节点的右子树最左面节点交换。
+- 第二次直接被NULL覆盖了。
+
+思路有点绕，其实就是换走，然后被覆盖就行。画个图就能理解，这里不详细说了。
+
+## 修剪二叉树
+
+给定一个二叉搜索树，同时给定最小边界L 和最大边界 R。通过修剪二叉搜索树，使得所有节点的值在[L, R]中 (R>=L) 。你可能需要改变树的根节点，所以结果应当返回修剪好的二叉搜索树的新的根节点。
+
+意思就是只留下区间里面的节点。
+
+https://leetcode.cn/problems/trim-a-binary-search-tree/description/
+
+
 
