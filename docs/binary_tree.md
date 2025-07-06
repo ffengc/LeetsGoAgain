@@ -54,7 +54,14 @@
   - [二叉搜索树中的插入操作](#二叉搜索树中的插入操作)
   - [删除二叉搜索树中的节点（难）](#删除二叉搜索树中的节点难)
     - [普通二叉树的删除](#普通二叉树的删除)
-  - [修剪二叉树](#修剪二叉树)
+  - [修剪二叉树（需要复习）](#修剪二叉树需要复习)
+    - [递归法](#递归法)
+    - [迭代法（需要理解这种思路）](#迭代法需要理解这种思路)
+  - [将有序数组转换为二叉搜索树（可以联想到：AVL的旋转）](#将有序数组转换为二叉搜索树可以联想到avl的旋转)
+    - [递归法（简单）](#递归法简单)
+    - [迭代法（Carl介绍的迭代法模拟递归）](#迭代法carl介绍的迭代法模拟递归)
+    - [红黑树插入时旋转保持平衡特性](#红黑树插入时旋转保持平衡特性)
+  - [把二叉搜索树转换为累加树（反中序遍历）](#把二叉搜索树转换为累加树反中序遍历)
 
 ## 二叉树理论基础
 
@@ -2125,7 +2132,9 @@ public:
 
 思路有点绕，其实就是换走，然后被覆盖就行。画个图就能理解，这里不详细说了。
 
-## 修剪二叉树
+## 修剪二叉树（需要复习）
+
+### 递归法
 
 给定一个二叉搜索树，同时给定最小边界L 和最大边界 R。通过修剪二叉搜索树，使得所有节点的值在[L, R]中 (R>=L) 。你可能需要改变树的根节点，所以结果应当返回修剪好的二叉搜索树的新的根节点。
 
@@ -2133,5 +2142,174 @@ public:
 
 https://leetcode.cn/problems/trim-a-binary-search-tree/description/
 
+这题的思路看起来有点难，但是听了Carl的讲解之后，就能理解了。
+
+还是要对递归要有更深的理解才可以。
+
+其实这里是分情况，也是遍历：
+- 如果不符合条件，一边的子树是有可能符合的（搜索树的性质）
+- 如果符合条件，则左右分别遍历
+
+```cpp
+class Solution {
+public:
+    TreeNode* trimBST(TreeNode* root, int low, int high) {
+        if(!root) return nullptr;
+        if(root->val < low) return trimBST(root->right, low, high); // 右孩子是有概率符合条件的
+        if(root->val > high) return trimBST(root->left, low, high);
+        root->left = trimBST(root->left, low, high);
+        root->right = trimBST(root->right, low, high);
+        return root;
+    }
+};
+```
+
+直接通过了。
+
+### 迭代法（需要理解这种思路）
+
+1. 修剪后的树的root一定是在[L, R]之间的，所以如果root不在范围内，先把root调整到范围内
+2. 然后在root的左边，可能存在 < L 的节点，删除这些节点
+3. 在root的右边，可能存在 > R 的节点，删除这些节点
+
+```cpp
+class Solution {
+public:
+    TreeNode* trimBST(TreeNode* root, int L, int R) {
+        if (!root) return nullptr;
+
+        // 处理头结点，让root移动到[L, R] 范围内，注意是左闭右闭
+        while (root != nullptr && (root->val < L || root->val > R)) {
+            if (root->val < L) root = root->right; // 小于L往右走
+            else root = root->left; // 大于R往左走
+        }
+        TreeNode *cur = root;
+        // 此时root已经在[L, R] 范围内，处理左孩子元素小于L的情况
+        while (cur != nullptr) {
+            while (cur->left && cur->left->val < L) {
+                cur->left = cur->left->right;
+            }
+            cur = cur->left;
+        }
+        cur = root;
+
+        // 此时root已经在[L, R] 范围内，处理右孩子大于R的情况
+        while (cur != nullptr) {
+            while (cur->right && cur->right->val > R) {
+                cur->right = cur->right->left;
+            }
+            cur = cur->right;
+        }
+        return root;
+    }
+};
+```
+
+## 将有序数组转换为二叉搜索树（可以联想到：AVL的旋转）
+
+https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree/description/
+
+### 递归法（简单）
+
+二分的思想其实就是，一个有序数组，让中间的那个来当根。数组分成两半来递归。
+
+```cpp
+class Solution {
+private:
+    using iter = std::vector<int>::iterator;
+    TreeNode* buildBST(const std::vector<int>& vec, iter begin, iter end) {
+        if(begin >= end) return nullptr;
+        iter mid = begin + ((end - begin) / 2);
+        TreeNode* root = new TreeNode((*mid));
+        root->left = buildBST(vec, begin, mid); // 构造左子树
+        root->right = buildBST(vec, mid + 1, end); // 构造右子树
+        return root;
+    }
+public:
+    TreeNode* sortedArrayToBST(vector<int>& nums) {
+        return buildBST(nums, nums.begin(), nums.end());
+    }
+};
+```
+
+递归法很容易理解。
+
+### 迭代法（Carl介绍的迭代法模拟递归）
+
+有点复杂，先略过了。
+
+### 红黑树插入时旋转保持平衡特性
+
+要维护平衡因子，这里不弄了。后面我会复习手撕avl和红黑树的。
 
 
+## 把二叉搜索树转换为累加树（反中序遍历）
+
+https://leetcode.cn/problems/convert-bst-to-greater-tree/ \
+https://leetcode-cn.com/problems/binary-search-tree-to-greater-sum-tree/
+
+两个题是一样的。
+
+给出二叉 搜索 树的根节点，该树的节点值各不相同，请你将其转换为累加树（Greater Sum Tree），使每个节点 node 的新值等于原树中大于或等于 node.val 的值之和。
+
+我想到的思路比较捞：
+
+我先中序遍历，遍历结果存的是节点。然后reverse一下。然后求前缀和。
+
+中序遍历是 O(n), reverse是 O(n), 求前缀和也是 O(n)。
+
+所以最后的效率也是 O(n)。
+
+虽然思路一般，但是效率好像还行，我先用这种方法做。
+
+```cpp
+class Solution {
+public:
+    std::vector<TreeNode*> inOrder;
+    void dfs(TreeNode* root) {
+        if(!root)return;
+        dfs(root->left);
+        inOrder.push_back(root);
+        dfs(root->right);
+    }
+    TreeNode* convertBST(TreeNode* root) {
+        dfs(root); // 1. 中序遍历
+        std::reverse(inOrder.begin(), inOrder.end()); // 2. 求倒序
+        // 3. 求前缀和
+        for(int i = 1; i < inOrder.size(); ++i)
+            inOrder[i]->val = inOrder[i]->val + inOrder[i-1]->val;
+        return root;
+    }
+};
+```
+
+顺利通过。
+
+**Carl的思路：**
+
+因为数组大家都知道怎么遍历啊，从后向前，挨个累加就完事了，这换成了二叉搜索树，看起来就别扭了一些是不是。
+
+那么知道如何遍历这个二叉树，也就迎刃而解了，从树中可以看出累加的顺序是右中左，所以我们需要反中序遍历这个二叉树，然后顺序累加就可以了。
+
+```cpp
+class Solution {
+public:
+    int pre = 0;
+    void dfs(TreeNode* root) {
+        if(!root)return;
+        dfs(root->right); // 反中序遍历
+        root->val += pre;
+        pre = root->val;
+        dfs(root->left);
+    }
+    TreeNode* convertBST(TreeNode* root) {
+        dfs(root);
+        return root;
+    }
+};
+```
+
+按照思路走，也顺利通过了。
+
+
+**二叉树到这里就完结了。二叉树和前面的内容一定要复习！**
