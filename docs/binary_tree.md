@@ -2313,3 +2313,5 @@ public:
 
 
 **二叉树到这里就完结了。二叉树和前面的内容一定要复习！**
+
+复习的文档: [binary_tree_review.md](./binary_tree_review.md)
