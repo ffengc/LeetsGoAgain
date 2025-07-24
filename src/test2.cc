@@ -7,8 +7,6 @@
 using namespace std;
 
 int main() {
-    std::cout << (true ^ false) << std::endl;
-    std::cout << (true ^ true) << std::endl;
-    std::cout << (false ^ false) << std::endl;
+    std::cout << (1 << 3) << std::endl;
     return 0;
 }
