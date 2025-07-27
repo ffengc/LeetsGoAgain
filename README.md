@@ -129,3 +129,12 @@
   - 将有序数组转换为二叉搜索树（可以联想到：AVL的旋转）
   - 把二叉搜索树转换为累加树（反中序遍历）
   - **2025年7月24日，复习二叉树内容，并把不熟悉的内容重新整理到 [binary_tree_review.md](./docs/binary_tree_review.md) 文档中。**
+
+## [回溯算法 `./docs/backtracking.md`](./docs/backtracking.md)
+- 回溯算法理论基础
+- 组合
+- 组合总和 III
+- 电话号码的字母组合
+- 组合总和
+- 组合总和II
+- 分割回文串
