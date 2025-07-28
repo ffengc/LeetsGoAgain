@@ -8,7 +8,10 @@
   - [电话号码的字母组合](#电话号码的字母组合)
   - [组合总和](#组合总和)
   - [组合总和II (重要, used数组的运用)](#组合总和ii-重要-used数组的运用)
-  - [分割回文串](#分割回文串)
+  - [分割回文串（需要复习）](#分割回文串需要复习)
+    - [利用dp数组进行优化](#利用dp数组进行优化)
+  - [复原 IP 地址（需要复习）](#复原-ip-地址需要复习)
+  - [子集（经典题目，要和组合问题区分开来）](#子集经典题目要和组合问题区分开来)
 
 
 ## 回溯算法理论基础
@@ -340,9 +343,154 @@ public:
 这题需要用used数组来去重，非常重要。
 
 
-## 分割回文串
+## 分割回文串（需要复习）
 
 https://leetcode.cn/problems/palindrome-partitioning/description/
 
 给你一个字符串 s，请你将 s 分割成一些 子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
 
+这题有点难，其实暴力遍历的是切割字符串的位置。
+
+要好好看看代码。
+
+```cpp
+class Solution {
+private:
+    bool isPalindrome(const std::string& str, int left, int right) {
+        while(left < right)
+            if(str[left++] != str[right--]) return false;
+        return true;
+    }
+private:
+    std::vector<std::vector<std::string>> res;
+    std::vector<std::string> path;
+    void backtracking(const std::string& s, int cutIndex) {
+        // cutIndex表示第一次切割的位置
+        if(cutIndex >= s.size()) {
+            res.push_back(path);
+            return;
+        }
+        for(int i = cutIndex; i < s.size(); ++i) {
+            // 先检查[cutIndex, i]这部分是不是合法的，如果不是可以直接跳过
+            if(isPalindrome(s, cutIndex, i))
+                // 说明 s中 [cutIndex, i] 这部分是合法的子串
+                path.push_back(std::string(s.begin() + cutIndex, s.begin() + i + 1));
+            else continue;
+            backtracking(s, i+1); // 开始找 i+1 开始切割的子串
+            path.pop_back(); // 因为上面一定会运行到if里面，如果没有运行到if里面，就不会调用 backtracking
+        }
+    }
+public:
+    std::vector<std::vector<std::string>> partition(std::string s) {
+        backtracking(s, 0);
+        return res;
+    }
+};
+```
+
+### 利用dp数组进行优化
+
+上面的代码有一个性能瓶颈就是：每一次都要判断回文。
+
+其实可以记录一个 `dp[][]` 数组，`dp[left][right]` 就可以告诉你是否是回文。然后dp数组在第一次调用 `backtracking` 之前就处理好，这样效率会更高。
+
+具体代码在联系了dp思想后再写吧。
+
+
+## 复原 IP 地址（需要复习）
+
+https://leetcode.cn/problems/restore-ip-addresses/description/
+
+这题是有点意思的，值得复习，自己也写出来了，不错。
+
+```cpp
+class Solution {
+private:
+    std::vector<std::string> result;
+    std::string valid_answers;
+    void backtracking(std::string& s, size_t startIndex, size_t dotNumber) {
+        // 其实就是插入三个.
+        // 插入的位置是有说法的
+        if (dotNumber == 3) {
+            // 点了第三个点后，第四段需要判断是否合法
+            if (isValid(s, startIndex, s.size() - 1))
+                result.push_back(s);
+            return; // 如果第四段不合法，就不用加到结果中了
+        }
+        for (int i = startIndex; i < s.size(); ++i) {
+            // 找一个位置插入点
+            // 在 i 的身后插入一个点，因为i从0开始，不能在前面插入
+            // 但是，要先判断在此为止插入是否合法
+            // 判断 [startIndex, i] 的位置是否合法，如果合法，则在i后插入一个 .
+            if (isValid(s, startIndex, i)) {
+                s.insert(s.begin() + i + 1, '.');
+                backtracking(s, i + 2, dotNumber + 1); // 注意！这里是 i+2, 因为已经插入了一个 .
+                s.erase(s.begin() + i + 1);
+            } else break; // 不合法，直接结束循环
+            /**
+             * 这里为什么不是continue呢？
+             * 我思考了一下，如果 [startIndex, i] 不合法，那么 [startIndex, i + n] 也一定不合法
+            */
+        }
+    }
+    bool isValid(const std::string& s, int begin, int end) {
+        // 判断 s中，[begin, end] 区间是否是合法ip地址
+        if (end - begin > 2)
+            return false; // 大于3位数肯定不合法
+        if (s[begin] == '0' && end - begin != 0) // 可以单独为0
+            return false; // 有前导0不合法
+        
+        int num = -1;
+        try {
+            num = std::stoi(std::string(s.begin() + begin, s.begin() + end + 1));
+        }
+        catch(const std::exception& e) {
+            return false; // 如果不能解析成数字，表示不合法
+        }
+        if (num < 0 || num > 255)
+            return false; // 判断数字范围
+        return true;
+    } //
+public:
+    std::vector<std::string> restoreIpAddresses(std::string s) {
+        backtracking(s, 0, 0);
+        return result;
+    }
+};
+```
+
+
+## 子集（经典题目，要和组合问题区分开来）
+
+https://leetcode.cn/problems/subsets/description/
+
+给你一个整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。
+
+解集 不能 包含重复的子集。你可以按 任意顺序 返回解集。
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> res;
+    std::vector<int> path;
+    void backtracking(const std::vector<int>& nums, int startIndex) {
+        res.push_back(path);
+        if (startIndex >= nums.size()) // 这个终止条件可以不加，因为for循环也会结束，startIndex不会超
+            return;
+        for(int i = startIndex; i < nums.size(); ++i) {
+            path.push_back(nums[i]);
+            backtracking(nums, i+1);
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        backtracking(nums, 0);
+        return res;
+    }
+};
+```
+
+**注意两个点：**
+- 终止条件是可以不加的，不会无限递归。因为每次 `backtracking` 是从 `i+1` 开始的。
+- 如果要写终止条件，`res.push_back(path);` 要写在前面，不然会漏掉最后一种情况的。然后其实发现，`res.push_back(path);`写在前面之后，终止条件就是多余的，和for循环的终止条件重复了。
