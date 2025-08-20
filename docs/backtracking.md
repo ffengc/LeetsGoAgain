@@ -494,3 +494,485 @@ public:
 **注意两个点：**
 - 终止条件是可以不加的，不会无限递归。因为每次 `backtracking` 是从 `i+1` 开始的。
 - 如果要写终止条件，`res.push_back(path);` 要写在前面，不然会漏掉最后一种情况的。然后其实发现，`res.push_back(path);`写在前面之后，终止条件就是多余的，和for循环的终止条件重复了。
+
+
+## 子集问题和组合问题的区别
+
+**子集是收集树形结构中树的所有节点的结果。而组合问题、分割问题是收集树形结构中叶子节点的结果。**
+
+
+## 子集II
+
+https://leetcode.cn/problems/subsets-ii/description/
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> res;
+    std::vector<int> path;
+    void backtracking(const std::vector<int>& nums, int startIndex, std::vector<bool>& used) {
+        res.push_back(path); // 添加结果
+        for(int i = startIndex; i < nums.size(); ++i) {
+            if(i > 0 && nums[i] == nums[i-1] && used[i-1] == false) continue;
+            used[i] = true;
+            path.push_back(nums[i]);
+            backtracking(nums, i + 1, used);
+            path.pop_back();
+            used[i] = false;
+        }
+    }
+public:
+    std::vector<std::vector<int>> subsetsWithDup(std::vector<int>& nums) {
+        std::sort(nums.begin(), nums.end()); // 先排序
+        std::vector<bool> used(nums.size(), false); // 去重数组，先设置为 false
+        backtracking(nums, 0, used);
+        return res;
+    }
+};
+```
+
+来到美国后的第一道题，有半个月没刷题了。这道题能做出来，不错的。
+
+### 补充
+
+本题也可以不使用used数组来去重，因为递归的时候下一个startIndex是i+1而不是0。
+
+如果要是全排列的话，每次要从0开始遍历，为了跳过已入栈的元素，需要使用used。
+
+代码如下：
+
+```cpp
+    void backtracking(vector<int>& nums, int startIndex) {
+        result.push_back(path);
+        for (int i = startIndex; i < nums.size(); i++) {
+            // 而我们要对同一树层使用过的元素进行跳过
+            if (i > startIndex && nums[i] == nums[i - 1] ) { // 注意这里使用i > startIndex
+                continue;
+            }
+            path.push_back(nums[i]);
+            backtracking(nums, i + 1);
+            path.pop_back();
+        }
+    }
+```
+
+但是我有点没看懂 Carl 这里这个去重的方法。
+
+## 递增子序列（需要复习）
+
+https://leetcode.cn/problems/non-decreasing-subsequences/description/
+
+给你一个整数数组 nums ，找出并返回所有该数组中不同的递增子序列，递增子序列中 至少有两个元素 。你可以按 任意顺序 返回答案。
+
+数组中可能含有重复元素，如出现两个整数相等，也可以视作递增序列的一种特殊情况。
+
+示例 1：
+
+输入：nums = [4,6,7,7]
+输出：[[4,6],[4,6,7],[4,6,7,7],[4,7],[4,7,7],[6,7],[6,7,7],[7,7]]
+示例 2：
+
+输入：nums = [4,4,3,2,1]
+输出：[[4,4]]
+
+先自己尝试写一下。
+
+```cpp
+class Solution {
+private:
+    /* 这题的问题在于，不能排序，所以去重肯定是比较麻烦了，用set去重吧 */
+    std::vector<std::vector<int>> res;
+    std::vector<int> path;
+    void backtracking(const std::vector<int>& nums, int startIndex) {
+        if(path.size() >= 2) res.push_back(path);
+        // 在这里设置一个 set
+        // tip: 如何区分set是加到哪里？是for外面还是for里面？
+        // 很明显我们这里是要去掉同一层的重复，同一层在哪里，肯定是for外面，for里面就是向更深的地方递归了
+        unordered_set<int> uset;
+        for(int i = startIndex; i < nums.size(); ++i) {
+            if(!path.empty() && nums[i] < path.back()) continue; // 因为是找递增的，如果遇到小的，就可以跳过
+            if(uset.find(nums[i]) != uset.end()) continue; // 同层已经使用过了
+            uset.insert(nums[i]); // 本层已经使用过这个元素了，后面不能再用了
+            // uset.insert为什么后面不用 erase，因为这里的意思是，只要在for里面使用过一次，整个 backtracking 部分就不能再使用这个元素了，要erase也是在for结束后erase，所以是可以省略的
+            // uset只负责本层去重，不需要管更深的地方
+            path.push_back(nums[i]);
+            backtracking(nums, i + 1);
+            path.pop_back();
+        }
+        //
+    }
+public:
+    std::vector<std::vector<int>> findSubsequences(std::vector<int>& nums) {
+        backtracking(nums, 0);
+        return res;
+    }
+};
+```
+
+另外，这道题里面，说了数据范围，因此可以用数组来代替set，这样会更快。
+
+## 全排列
+
+https://leetcode.cn/problems/permutations/description/
+
+全排列就是一个很经典的一个题目了。
+
+直接写代码
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> res;
+    std::vector<int> path;
+    void backtracking(const std::vector<int>& nums, std::vector<bool> used) {
+        if(path.size() == nums.size()) {
+            res.push_back(path);
+            return;
+        }
+        for(int i = 0; i < nums.size(); ++i) {
+            // 虽然题目说了不含重复，但是还需要去重的
+            // 不然就会出现 [1,1,2] 这种情况了
+            if(used[i] == true) continue; // 当前数字用过了
+            used[i] = true;
+            path.push_back(nums[i]);
+            backtracking(nums, used);
+            path.pop_back();
+            used[i] = false;
+        }
+    }
+public:
+    std::vector<std::vector<int>> permute(std::vector<int>& nums) {
+        std::vector<bool> used(nums.size(), false);
+        backtracking(nums, used);
+        return res;
+    }
+};
+```
+
+要注意这个去重的逻辑。
+
+
+## 全排列 II
+
+https://leetcode.cn/problems/permutations-ii/description/
+
+就是题目输入的数字是会有重复的，在上面那道题的基础上去重就可以了。
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> res;
+    std::vector<int> path;
+    void backtracking(const std::vector<int>& nums, std::vector<bool> used) {
+        if(path.size() == nums.size()) {
+            res.push_back(path);
+            return;
+        }
+        for(int i = 0; i < nums.size(); ++i) {
+            if(used[i] == true) continue; // 跳过自己
+            if(i > 0 && nums[i] == nums[i - 1] && used[i-1] == false) continue; // 加上去重的逻辑
+            used[i] = true;
+            path.push_back(nums[i]);
+            backtracking(nums, used);
+            path.pop_back();
+            used[i] = false;
+        }
+    }
+public:
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        std::sort(nums.begin(), nums.end());
+        std::vector<bool> used(nums.size(), false);
+        backtracking(nums, used);
+        return res;
+    }
+};
+```
+
+没问题，顺利通过。
+
+### 拓展：关于层去重和树枝去重
+
+摘自：代码随想录
+
+大家发现，去重最为关键的代码为：
+
+```cpp
+if (i > 0 && nums[i] == nums[i - 1] && used[i - 1] == false) {
+    continue;
+}
+```
+如果改成 `used[i - 1] == true`， 也是正确的!，去重代码如下：
+
+```cpp
+if (i > 0 && nums[i] == nums[i - 1] && used[i - 1] == true) {
+    continue;
+}
+```
+这是为什么呢，就是上面我刚说的，如果要对树层中前一位去重，就用`used[i - 1] == false`，如果要对树枝前一位去重用`used[i - 1] == true`。
+
+
+**对于排列问题，树层上去重和树枝上去重，都是可以的，但是树层上去重效率更高！**
+
+这么说是不是有点抽象？
+
+来来来，我就用输入: [1,1,1] 来举一个例子。
+
+树层上去重`(used[i - 1] == false)`，的树形结构如下：
+
+![](https://file1.kamacoder.com/i/algo/20201124201406192.png)
+
+树枝上去重`(used[i - 1] == true)`的树型结构如下：
+
+![](https://file1.kamacoder.com/i/algo/20201124201431571.png)
+
+**大家应该很清晰的看到，树层上对前一位去重非常彻底，效率很高，树枝上对前一位去重虽然最后可以得到答案，但是做了很多无用搜索。**
+
+
+## 回溯算法去重问题用set的写法，set应该放在哪里
+
+用子集II这道题来说。
+
+https://leetcode.cn/problems/subsets-ii/
+
+[1, 2, 2, 3] 这个例子
+
+第一次选了 [1, 2] （这里的2是第一个2）之后，第二次 [1, ] 就不能把第二个2push进来了，不然就会重复。
+
+其实本质就是搞清楚，到底是去哪里的重。其实就两种，层上和树枝上的。一般其实就是树层上的。
+
+所以如果要用 set 就是要对每一层去重。
+
+而每一层，其实就是在 backtracking 里面 for 外面。
+
+为什么不是 backtracking 函数外（全局）？因为那样set就不只是控制一层了，而是控制一整棵树。
+
+为什么不是在 for 里面定义？因为那样set就一直刷新，那还记录什么？
+
+当set定义在 backtracking 里面 for 外面的时候，他就是在控制每一层。因为for里面就是对每一层的节点再往深处遍历，for就是便利当前层所有节点。
+
+**所以一定要记住，对层去重的时候，set的定义就是在for外面的backtracking里面的。**
+
+然后为什么不用erase呢，前面代码的注释也说了。
+
+```cpp
+// uset.insert为什么后面不用 erase，因为这里的意思是，只要在for里面使用过一次，整个 backtracking 部分就不能再使用这个元素了，要erase也是在for结束后erase，所以是可以省略的
+// uset只负责本层去重，不需要管更深的地方
+```
+
+然后前面那题递增子序列，就是因为不能排序，所以只能用set去重了。如果能排序，set的效率肯定不如用used。
+
+## 重新安排行程
+
+https://leetcode.cn/problems/reconstruct-itinerary/description/
+
+这题有点难，另外这题用Carl的方法是过不了的，应该得用dp。这里先跳过。
+
+## N 皇后
+
+经典题目了
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<std::pair<int, int>>> res;
+    std::vector<std::pair<int, int>> path;
+    void backtracking(int n, int row) {
+        if(path.size() == n) {
+            res.push_back(path);
+            return;
+        }
+        for(int col = 0; col < n; ++col) {
+            if(!isValid(path, {row, col})) continue;
+            // std::string current_layer('.', n);
+            // current_layer[col] = 'Q';
+            path.push_back({row, col}); // 这里能否 push 需要判断
+            backtracking(n, row + 1); // 下一行
+            path.pop_back();
+        }
+    }
+    bool isValid(const std::vector<std::pair<int, int>>& path, std::pair<int, int> location) {
+        // path 有几个数字，代表已经填充了几行了，则新数字会被放在第 path.size() + 1 行的 col 上
+        // 这里的思路是我自己想出来的
+        // path: [2, 0,] 表示当前棋盘中: (0, 2), (1, 0) 位置已经被占用
+        // 所以想到这里，还是直接维护 pair 的数组吧
+        for(const auto& e : path) {
+            // 遍历判断会不会和 path中任何一个冲突
+            if(e.first + e.second == location.first + location.second) return false; // 正向45度冲突
+            if(location.first - e.first == location.second - e.second) return false; // 反向45度冲突
+            if(location.first == e.first) return false;
+            if(location.second == e.second) return false;
+        }
+        return true;
+    }
+private:
+    /** 把结果写成string的形式 */
+    std::vector<std::vector<std::string>> pairToString(int n) {
+        auto final_res = std::vector<std::vector<std::string>>();
+        for(const auto& e : res) {
+            // e: [(a,b), (), ...]
+            auto single_final_res = std::vector<std::string>();
+            for(const auto& ee : e) {
+                int idx = ee.second;
+                std::string s(n, '.');
+                s[idx] = 'Q';
+                single_final_res.push_back(s);
+            }
+            final_res.push_back(single_final_res);
+        }
+        return final_res;
+    }
+private:
+    /** for debug */
+    void printResult(const std::vector<std::vector<std::pair<int, int>>>& lst) {
+        // [[(1, 2), ...], []]
+        for(const auto& e : lst) {
+            for(const auto& ee : e) 
+                std::cout << "(" << ee.first << "," << ee.second << "), ";
+            std::cout << std::endl;
+        }   
+    }
+public:
+    std::vector<std::vector<std::string>> solveNQueens(int n) {
+        backtracking(n, 0);
+        // printResult(res); // for debug
+        return pairToString(n);
+    }
+};
+```
+
+我这个方法感觉比Carl的还好，我这个方法来判断棋盘是否合法感觉挺快的，不用一直遍历。我用数字来代替棋盘，最后再转化成字符串。判断棋盘合法性，就用数字的方法去处理。
+
+[52. N皇后II](https://leetcode.cn/problems/n-queens-ii/description/) 是一样的。
+
+## 解数独
+
+https://leetcode.cn/problems/sudoku-solver/description/
+
+这题尝试自己做，做了一个半小时
+
+```cpp
+class Solution {
+private:
+    std::vector<std::pair<int, int>> blanks; // 记录需要填空的地方
+    std::vector<std::set<int>> small_board_sets; // 给9个小九宫格准备一个set
+    std::vector<std::set<int>> row_sets; // 每一行每一列都准备一个set
+    std::vector<std::set<int>> col_sets;
+    int whichSmallBoard(int row, int col) {
+        // 传入行和列，输入这是第几个小宫格
+        if(row >= 0 && row <= 2 && col >= 0 && col <= 2) return 0;
+        else if(row >= 0 && row <= 2 && col >= 3 && col <= 5) return 1;
+        else if(row >= 0 && row <= 2 && col >= 6 && col <= 8) return 2;
+        else if(row >= 3 && row <= 5 && col >= 0 && col <= 2) return 3;
+        else if(row >= 3 && row <= 5 && col >= 3 && col <= 5) return 4;
+        else if(row >= 3 && row <= 5 && col >= 6 && col <= 8) return 5;
+        else if(row >= 6 && row <= 8 && col >= 0 && col <= 2) return 6;
+        else if(row >= 6 && row <= 8 && col >= 3 && col <= 5) return 7;
+        else if(row >= 6 && row <= 8 && col >= 6 && col <= 8) return 8;
+        return -1;
+    }
+    void init(const std::vector<std::vector<char>>& board) {
+        // 初始化需要填空的地方, 顺便初始化27个set
+        for(int i = 0; i < 9; ++i) {
+            // 想了好久也不知道为什么构造函数那里构造不了
+            small_board_sets.push_back(std::set<int>());
+            row_sets.push_back(std::set<int>());
+            col_sets.push_back(std::set<int>());
+        }
+        for(int i = 0; i < 9; ++i) { // 可以写死，题目说了一定是九宫格
+            for(int j = 0; j < 9; ++j) {
+                if(board[i][j] == '.') {
+                    blanks.push_back({i,j});
+                    continue;
+                }
+                // 此时 board[i][j]是一个数字
+                int num = board[i][j] - '0';
+                // std::cout << num << std::endl; // DEBUG
+                // std::cout << "i: " << i << std::endl;
+                row_sets[i].insert(num);
+                col_sets[j].insert(num);
+                small_board_sets[whichSmallBoard(i, j)].insert(num);
+            }
+        }
+    }
+private:
+    bool flag = false; // 表示是否找到答案
+    void backtracking(std::vector<std::vector<char>>& board, int startIndex, int fill_count) {
+        if(fill_count == blanks.size()) {
+            flag = true;
+            return;
+        }
+        // 我感觉是不用设置 flag 表示结束的，因为走到这里的时候board已经被填满了
+        // 然后 return 的时候也没有 pop, fill_count也不会--，所以这里是会一直往上然后结束的
+        // 但是没想明白，后面还是加上了
+        
+        // 此时轮到填第 startIndex 个空，此时的 row, col 是可以拿到的
+        int row = blanks[startIndex].first;
+        int col = blanks[startIndex].second;
+        for(int i = 1; i <= 9; ++i) {
+            if(!isValid(board, row, col, i)) continue; // 先判断能不能填进去
+            board[row][col] = '0' + i; // 填进去
+            row_sets[row].insert(i);
+            col_sets[col].insert(i);
+            small_board_sets[whichSmallBoard(row, col)].insert(i);
+            backtracking(board, startIndex+1, fill_count+1);
+            if(flag == true) return; // 直接跳过后面弄步骤，而且不要erase了
+            row_sets[row].erase(i);
+            col_sets[col].erase(i);
+            small_board_sets[whichSmallBoard(row, col)].erase(i);
+            board[row][col] = '.';
+        }
+    }
+    bool isValid(const std::vector<std::vector<char>>& board, int row, int col, int number) {
+        auto row_set = row_sets[row];
+        auto col_set = col_sets[col];
+        auto small_board_set = small_board_sets[whichSmallBoard(row, col)];
+        if(row_set.find(number) != row_set.end()) return false;
+        if(col_set.find(number) != col_set.end()) return false;
+        if(small_board_set.find(number) != small_board_set.end()) return false;
+        return true;
+    }
+private:
+    /** for debug */
+    void printOneSet(const std::set<int> s) {
+        std::cout << '(';
+        for(const auto& e : s) std::cout << e << ',';
+        std::cout << ')' << std::endl;
+    }
+    void printAllSets() {
+        for(const auto& e : small_board_sets) printOneSet(e);
+        std::cout << std::endl;
+        for(const auto& e : row_sets) printOneSet(e);
+        std::cout << std::endl;
+        for(const auto& e : col_sets) printOneSet(e);
+    }
+    void printBoard(const std::vector<std::vector<char>>& board) {
+        for(const auto& e : board) {
+            for(const auto& ee : e)
+                std::cout << ee << " ";
+            std::cout << std::endl;
+        }
+    }
+public:
+    void solveSudoku(std::vector<std::vector<char>>& board) {
+        // 回溯前的准备工作
+        init(board);
+        // printAllSets(); // for debug
+        backtracking(board, 0, 0);
+        printBoard(board);
+    }
+};
+```
+
+写了一个半小时，一次写对。感觉已经尽力了，还有最后一个测试用例超时了。
+
+![](./assets/解数独.png)
+
+可能是一开始初始化花了很多时间，但是我这样写确实是比较清晰的。
+
+leetcode上还有一些比如状态压缩的方法去优化，可以击败 100%，后面再学吧。
+
+## 总结
+
+回溯算法的总结，我找时间要好好看看Carl的总结，回溯篇就到这里了。
+
+https://programmercarl.com/%E5%9B%9E%E6%BA%AF%E6%80%BB%E7%BB%93.html#%E5%9B%9E%E6%BA%AF%E6%B3%95%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80
