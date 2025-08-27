@@ -30,6 +30,20 @@
     - [我的思路（bug）](#我的思路bug)
     - [正确思路](#正确思路)
   - [柠檬水找零](#柠檬水找零)
+  - [根据身高重建队列（需要复习）](#根据身高重建队列需要复习)
+  - [用最少数量的箭引爆气球（需要复习）](#用最少数量的箭引爆气球需要复习)
+  - [无重叠区间（和上面射箭题一起复习：动态调整区间边界用于计数）](#无重叠区间和上面射箭题一起复习动态调整区间边界用于计数)
+    - [我的思路](#我的思路-1)
+  - [划分字母区间](#划分字母区间)
+    - [我的思路](#我的思路-2)
+    - [Carl的思路](#carl的思路-3)
+  - [合并区间](#合并区间)
+  - [单调递增的数字](#单调递增的数字)
+  - [监控二叉树（状态机）](#监控二叉树状态机)
+    - [确认方向](#确认方向)
+    - [设置状态机](#设置状态机)
+    - [null应该被设置成什么状态？](#null应该被设置成什么状态)
+    - [确定返回条件](#确定返回条件)
 
 
 ## 贪心算法理论基础
@@ -737,3 +751,560 @@ public:
 
 https://leetcode.cn/problems/lemonade-change/description/
 
+在柠檬水摊上，每一杯柠檬水的售价为 5 美元。顾客排队购买你的产品，（按账单 bills 支付的顺序）一次购买一杯。
+
+每位顾客只买一杯柠檬水，然后向你付 5 美元、10 美元或 20 美元。你必须给每个顾客正确找零，也就是说净交易是每位顾客向你支付 5 美元。
+
+注意，一开始你手头没有任何零钱。
+
+给你一个整数数组 bills ，其中 bills[i] 是第 i 位顾客付的账。如果你能给每位顾客正确找零，返回 true ，否则返回 false 。
+
+
+其实只有三种情况：
+
+- 给的是5块，则直接收下
+- 给的是10块，则消耗一张5，收下一张10
+- 给的是20块，则优先消耗一张5一张10，其次才是3张5
+
+**为什么？因为5块是更万能的。因为10块只能用来给20去找零，不能用来给10块去找零。如果别人给张10块，你身上只有10块而没有5就麻烦了，所以优先消耗5。** 其实这个就是本题的关键‼️ 搞定这个之后，后面就只需要模拟就行了
+
+其实这里就是贪心了。
+
+所以就是按照顺序模拟就行了。
+
+```cpp
+class Solution {
+public:
+    bool lemonadeChange(vector<int>& bills) {
+        int five = 0;
+        int ten = 0;
+        int twenty = 0;
+        for(int i = 0; i < bills.size(); ++i) {
+            if(bills[i] == 5) {
+                five++;
+            }
+            else if(bills[i] == 10) {
+                if(five <= 0) return false;
+                five--;
+                ten++;
+            }
+            else if(bills[i] == 20) {
+                if(ten >= 1 && five >=1) {
+                    ten--;
+                    five--;
+                    twenty++;
+                }
+                else if(ten ==0 && five >= 3) {
+                    five -= 3;
+                    twenty++;
+                }
+                else return false;
+            }
+        }
+        return true;
+    }
+};
+```
+
+简单模拟就行了。
+
+## 根据身高重建队列（需要复习）
+
+https://leetcode.cn/problems/queue-reconstruction-by-height/description/
+
+假设有打乱顺序的一群人站成一个队列，数组 people 表示队列中一些人的属性（不一定按顺序）。每个 people[i] = [hi, ki] 表示第 i 个人的身高为 hi ，前面 正好 有 ki 个身高大于或等于 hi 的人。
+
+请你重新构造并返回输入数组 people 所表示的队列。返回的队列应该格式化为数组 queue ，其中 queue[j] = [hj, kj] 是队列中第 j 个人的属性（queue[0] 是排在队列前面的人）。
+
+这题和分发糖果的思路有点像。
+
+输入：people = [[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]]
+输出：[[5,0],[7,0],[5,2],[6,1],[4,4],[7,1]]
+
+**要记住：当有两个变量需要考虑的时候，一定要分开处理，如果一起处理，就会顾此失彼。**
+
+想想，为什么直接处理很困难，因为第一个元素是没有顺序的，第二个也没有顺序。
+
+假设我想处理第二个元素，我就要考虑第一个元素，而第一个元素没有顺序，就很难考虑。
+
+所以：
+
+我们要先按照身高排序，当第一个元素有顺序之后，再按照第二个元素的要求来调整位置就行了。
+
+比如：`{{7, 0}, {4, 4}, {7, 1}, {5, 0}, {6, 1}, {5, 2}}`
+
+按照第一个元素排序之后：`(7,0) (7,1) (6,1) (5,0) (5,2) (4,4)`
+
+此时就可以放心把 (6, 1) 向前挪动了。
+
+当然，我们可以创建一个新的 `vector<vector<int>>` 来插入。
+
+插入的过程：
+
+插入[7,0]：[[7,0]] \
+插入[7,1]：[[7,0],[7,1]] \
+插入[6,1]：[[7,0],[6,1],[7,1]] \
+插入[5,0]：[[5,0],[7,0],[6,1],[7,1]] \
+插入[5,2]：[[5,0],[7,0],[5,2],[6,1],[7,1]] \
+插入[4,4]：[[5,0],[7,0],[5,2],[6,1],[4,4],[7,1]]
+
+
+```cpp
+class Solution
+{
+private:
+    void print(const std::vector<std::vector<int>> &arr)
+    {
+        for (const auto &e : arr)
+        {
+            std::cout << "(" << e[0] << "," << e[1] << ") ";
+        }
+        std::cout << std::endl;
+    } //
+public:
+    std::vector<std::vector<int>> reconstructQueue(std::vector<std::vector<int>> &people)
+    {
+        std::sort(people.begin(), people.end(), [](const auto &a, const auto &b)
+                  { 
+                    if (a[0] == b[0]) return a[1] < b[1];
+                    return a[0] > b[0]; });
+        // print(people);
+        auto res = std::vector<std::vector<int>>();
+        for (int i = 0; i < people.size(); ++i)
+        {
+            int pos = people[i][1];
+            // 这里要注意：是不用担心 pos 会被弄成在一个越界的位置上的，如果这样，题目就是有问题的
+            res.insert(res.begin() + pos, people[i]);
+        }
+        return res;
+    }
+};
+```
+
+**这里要注意。当两个人身高相同的时候，第二个元素小的优先放在前面。**
+
+当然，这里的代码是Carl的思路，重新插入。当然，一直在vector上插入效率肯定是很一般的。
+
+**所以可以改成链表，然后按照我一开始想到的思路，直接把链表里的节点向前挪动。**
+
+这道题目可以说比135. 分发糖果 (opens new window)难不少，其贪心的策略也是比较巧妙。
+
+## 用最少数量的箭引爆气球（需要复习）
+
+https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/description/
+
+
+有一些球形气球贴在一堵用 XY 平面表示的墙面上。墙面上的气球记录在整数数组 points ，其中points[i] = [xstart, xend] 表示水平直径在 xstart 和 xend之间的气球。你不知道气球的确切 y 坐标。
+
+一支弓箭可以沿着 x 轴从不同点 完全垂直 地射出。在坐标 x 处射出一支箭，若有一个气球的直径的开始和结束坐标为 xstart，xend， 且满足  xstart ≤ x ≤ xend，则该气球会被 引爆 。可以射出的弓箭的数量 没有限制 。 弓箭一旦被射出之后，可以无限地前进。
+
+给你一个数组 points ，返回引爆所有气球所必须射出的 最小 弓箭数 。
+
+
+这题有点难，看看代码。
+
+```cpp
+class Solution {
+private:
+    static bool cmp(const vector<int>& a, const vector<int>& b) {
+        return a[0] < b[0];
+    }
+public:
+    int findMinArrowShots(vector<vector<int>>& points) {
+        if (points.size() == 0) return 0;
+        sort(points.begin(), points.end(), cmp);
+
+        int result = 1; // points 不为空至少需要一支箭
+        for (int i = 1; i < points.size(); i++) {
+            if (points[i][0] > points[i - 1][1]) {  // 气球i和气球i-1不挨着，注意这里不是>=
+                result++; // 需要一支箭
+            }
+            else {  // 气球i和气球i-1挨着
+                points[i][1] = min(points[i - 1][1], points[i][1]); // 更新重叠气球最小右边界
+            }
+        }
+        return result;
+    }
+};
+```
+
+其实排序是好理解的。
+
+然后 else 这里的更新重叠气球的最小右边界是因为：
+
+只有在 `points[i][0] > points[i - 1][1]` 的时候才会 result++
+
+假设第一次进入了 else 这里，射穿了两个气球，遍历到了第三个气球之后，我怎么只知道第三个气球是否一起背前两个一起处理掉了？
+
+所以就要更新最右边界，如果第三个气球还是可以包含这个边界，则 result 不用++，继续更新最右边界。
+
+
+## 无重叠区间（和上面射箭题一起复习：动态调整区间边界用于计数）
+
+https://leetcode.cn/problems/non-overlapping-intervals/
+
+### 我的思路
+
+按照起始位置先排序，后面的思路好像和上面那个题差不多。
+
+```cpp
+class Solution {
+public:
+    int eraseOverlapIntervals(vector<vector<int>>& intervals) {
+        std::sort(intervals.begin(), intervals.end(), [](const auto& e1, const auto& e2){
+            if(e1[0] == e2[0]) return e1[1] < e2[1];
+            return e1[0] < e2[0];
+        });
+        int res = 0;
+        for(int i = 1; i < intervals.size(); ++i) {
+            if(intervals[i][0] >= intervals[i-1][1]) {
+                // 没有重叠
+                continue;
+            }
+            else {
+                intervals[i][1] = std::min(intervals[i][1], intervals[i-1][1]);
+                res++;
+            }
+        }
+        return res;
+    }
+};
+```
+
+实时证明我的思路是对的，通过调整边界可以很好的处理好这题。
+
+## 划分字母区间
+
+https://leetcode.cn/problems/partition-labels/description/
+
+### 我的思路
+
+```cpp
+class Solution {
+public:
+    std::vector<int> partitionLabels(std::string s) {
+        // ababcbaca defegdehijhklij
+        // a: (0, 8)
+        // b: (1, 5)
+        // c: (4, 7)
+        // d: (9, 14)
+        // e: (10, 12)
+        // f: (11, 11)
+        // g: (13, 13)
+        // h: (16, 19)
+        // i: (17, 22)
+        // j: (18, 23)
+        // h: (19, 19)
+        // k: (20, 20)
+        // l: (21, 21)
+        // 先统计出现的位置
+        std::unordered_map<char, std::vector<int>> mmap;
+        for(int i = 0; i < s.size(); ++i)
+            mmap[s[i]].push_back(i);
+        // 统计区间
+        std::vector<std::vector<int>> intervals;
+        for(auto& e : mmap) {
+            // e.first -> char
+            // e.second -> vector
+            int cur_min = e.second[0];
+            int cur_max = e.second[e.second.size() - 1];
+            intervals.push_back({cur_min, cur_max});
+        }
+        // 排序
+        std::sort(intervals.begin(), intervals.end(), [](const auto& e1, const auto& e2){
+            if(e1[0] == e2[0]) assert(false);
+            return e1[0] < e2[0];
+        });
+        std::vector<int> res;
+        for(int i = 1; i < intervals.size(); ++i) {
+            if(intervals[i][0] > intervals[i-1][1]) {
+                // 不重叠
+                res.push_back(intervals[i-1][1] - intervals[i-1][0] + 1); // 处理上一个结果
+            } else {
+                // 重叠，说明需要放在一起
+                intervals[i][0] = std::min(intervals[i][0], intervals[i-1][0]); // 要处理，因为要用来求长度
+                intervals[i][1] = std::max(intervals[i][1], intervals[i-1][1]); // 有边界
+            }
+        }
+        res.push_back(intervals[intervals.size()-1][1] - intervals[intervals.size()-1][0] + 1); // 走到最后，加入最后一组结果
+        return res;
+    }
+};
+```
+
+这题没毛病，直接通过！这个就是上面动态调整区间题目的应用！这题其实有点难，也顺利通过了！
+
+当然效率一般，因为前面为了清晰，遍历了map。
+
+### Carl的思路
+
+Carl提供了两个思路，其中一个和我的一样，另一个挺巧妙的。
+
+在遍历的过程中相当于是要找每一个字母的边界，如果找到之前遍历过的所有字母的最远边界，说明这个边界就是分割点了。此时前面出现过所有字母，最远也就到这个边界了。
+
+可以分为如下两步：
+
+统计每一个字符最后出现的位置
+从头遍历字符，并更新字符的最远出现下标，如果找到字符最远出现位置下标和当前下标相等了，则找到了分割点
+
+![](https://file1.kamacoder.com/i/algo/20201222191924417.png)
+
+
+这个方法就不写代码了。
+
+## 合并区间
+
+https://leetcode.cn/problems/merge-intervals/description/
+
+以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。请你合并所有重叠的区间，并返回 一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间 。
+
+这个题和上面的题不是一样吗。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        // 排序
+        std::sort(intervals.begin(), intervals.end(), [](const auto& e1, const auto& e2){
+            if(e1[0] == e2[0]) return e1[1] < e2[1];
+            return e1[0] < e2[0];
+        });
+        std::vector<std::vector<int>> res;
+        for(int i = 1; i < intervals.size(); ++i) {
+            if(intervals[i][0] > intervals[i-1][1]) {
+                // 没有重叠
+                res.push_back({intervals[i-1][0], intervals[i-1][1]});
+            } else {
+                // 发生重叠
+                intervals[i][0] = std::min(intervals[i][0], intervals[i-1][0]);
+                intervals[i][1] = std::max(intervals[i][1], intervals[i-1][1]);
+            }
+        }
+        // 记得把最后一个加上去
+        res.push_back({intervals[intervals.size()-1][0], intervals[intervals.size()-1][1]});
+        return res;
+    }
+};
+```
+
+顺利通过。
+
+## 单调递增的数字
+
+https://leetcode.cn/problems/monotone-increasing-digits/
+
+当且仅当每个相邻位数上的数字 x 和 y 满足 x <= y 时，我们称这个整数是单调递增的。
+
+给定一个整数 n ，返回 小于或等于 n 的最大数字，且数字呈 单调递增 。
+
+我确实能想到一个思路。
+
+首先肯定是把每一位分出来先。
+
+然后从前向后遍历。
+
+如果这个数字一直是递增的，则结果就是原本的数字。
+
+如果数字开始遇到递减，则要进行处理。
+
+比如：1234521。当遍历到2的时候，发现比5小，则后面就能直接处理成 1234499
+
+当然：要注意有相同数字的情况：125521
+
+此时遇到2的时候，发现要改变的时候，不能只改变右边那个5，左边那个也需要处理。
+
+我的思路没问题！顺利通过！我用了一个 tmpPtr 去记录需要开始修改的地方即可。而且我这个方法效率是非常顶的。
+
+```cpp
+class Solution {
+private:
+    std::vector<int> getDigit(int n) {
+        // std::list<int> lst; // 因为要pushfront，所以用list吧; 或者最后reverse也可以
+        std::vector<int> res;
+        while(n) {
+            res.push_back(n % 10);
+            n /= 10;
+        }
+        std::reverse(res.begin(), res.end());
+        return res;
+    }
+    long long getInt(std::vector<int>& digits) {
+        std::reverse(digits.begin(), digits.end());
+        long long tens = 1;
+        long long res = 0;
+        for(int i = 0; i < digits.size(); ++i) {
+            res += tens * digits[i];
+            tens *= 10;
+        }
+        return res;
+    }
+public:
+    int monotoneIncreasingDigits(int n) {
+        // 1234521
+        // 1234499
+        // 1234421
+        auto vec = getDigit(n);
+        int tmpPtr = -1; // -1 表示未被设置的状态
+        for(int i = 1; i < vec.size(); ++i) {
+            if(vec[i] == vec[i-1]) {
+                if(tmpPtr == -1)
+                    tmpPtr = i - 1; // 记录一下 重复数字的位置
+                else continue; // 如果已经被设置过了，则保留
+            } else if(vec[i] > vec[i-1]) {
+                // 记得重置 tmpPtr
+                tmpPtr = -1;
+            } else if(vec[i] < vec[i-1]) {
+                if(tmpPtr == -1) {
+                    // 没有重复元素
+                    vec[i-1]--;
+                    for(int j = i; j < vec.size(); ++j)
+                        vec[j] = 9;
+                    break;
+                } else if(tmpPtr != -1) {
+                    vec[tmpPtr]--;
+                    for(int j = tmpPtr+1; j < vec.size(); ++j) 
+                        vec[j] = 9;
+                    break;
+                }
+            }
+        }
+        return getInt(vec);
+    }
+};
+```
+
+今天状态不错！顺利通过很多道不简单的题。
+
+## 监控二叉树（状态机）
+
+https://leetcode.cn/problems/binary-tree-cameras/description/
+
+这题比较难。需要一步一步理解。
+
+下面的内容都来自 Carl：https://programmercarl.com/0968.%E7%9B%91%E6%8E%A7%E4%BA%8C%E5%8F%89%E6%A0%91.html#%E6%80%9D%E8%B7%AF
+
+### 确认方向
+
+首先这是一棵二叉树，所以越往下，理论上摄像头是越多的，所以为了节省摄像头，我们必须在越下面的地方节省摄像头。
+
+所以，我们希望，叶子结点的父亲都设置一个摄像头，这样就可以把所有叶子结点都覆盖到。
+
+放好叶子结点的父亲结点的摄像头之后，在一个枝上，从下往上，每隔一个结点设置一个摄像头即可。
+
+**难点：**
+- 如何每隔一个结点设置摄像头
+- 如何从下往上遍历
+
+从下往上遍历很简单，用后续不就行了。
+
+```cpp
+int traversal(TreeNode* cur) {
+    if (终止条件) return ;
+    int left = traversal(cur->left);    // 左
+    int right = traversal(cur->right);  // 右
+    // todo                            // 中
+    return ;
+}
+```
+
+### 设置状态机
+
+很好理解，只有三种状态。
+
+**有如下三种：**
+
+- 该节点无覆盖
+- 本节点有摄像头
+- 本节点有覆盖
+
+**我们分别有三个数字来表示：**
+
+- 0：该节点无覆盖
+- 1：本节点有摄像头
+- 2：本节点有覆盖
+
+这个很好理解，不用多说。
+
+### null应该被设置成什么状态？
+
+null只能被设置成有覆盖的状态(2)。因为如果是0，则叶子就要装摄像头了。如果是1，则叶子就被覆盖了，但事实上叶子没有被覆盖，所以只能是2。
+
+所以：`if(root == nullptr) return 2`
+
+### 确定返回条件
+
+**情况1：左右节点都有覆盖**
+
+左孩子有覆盖，右孩子有覆盖，那么此时中间节点应该就是无覆盖的状态了。
+
+
+**情况2：左右节点至少有一个无覆盖的情况**
+
+很好理解，那中间肯定要摄像头。
+
+**情况3：左右节点至少有一个有摄像头**
+
+这个也很好理解，中间直接是有覆盖就行了。
+
+**情况4：头结点没有覆盖（容易漏掉）**
+
+所以在dfs函数外面，还需要再判断一次‼️
+
+```cpp
+int minCameraCover(TreeNode* root) {
+    result = 0;
+    if (traversal(root) == 0) { // root 无覆盖
+        result++;
+    }
+    return result;
+}
+```
+
+然后就是把代码写下就行了。
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+private:
+    // 0: 无覆盖, 1: 摄像头, 2: 有覆盖
+    int result = 0;
+    int dfs(TreeNode* root) {
+        if(root == nullptr) return 2;
+        int left = dfs(root->left);
+        int right = dfs(root->right);
+        // 分情况判断
+        // 情况1
+        if(left == 2 && right == 2) return 0;
+        // 情况2
+        if(left == 0 || right == 0) {
+            // 按装摄像头
+            result++;
+            return 1;
+        }
+        // 情况3
+        if(left == 1 || right == 1) return 2; 
+        return -1; // 理论不会走到这里
+    }
+public:
+    int minCameraCover(TreeNode* root) {
+        if(dfs(root) == 0) {
+            result++; // 头结点没有被覆盖
+        }
+        return result;
+    }
+};
+```
+
+顺利通过！
+
+贪心算法到这里就完结了。
