@@ -1,5 +1,5 @@
-test:37_Sudoku_Solver.cc
-	g++ -o $@ $^ -std=c++11 -g
+test:406_Queue_Reconstruction_by_Height.cc
+	g++ -o $@ $^ -std=c++14 -g
 .PHONY:clean
 clean:
 	rm -f test
