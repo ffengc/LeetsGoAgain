@@ -297,7 +297,7 @@ public:
 
 一次通过。
 
-## 整数拆分
+## 整数拆分（需要复习）
 
 https://leetcode.cn/problems/integer-break/
 
@@ -312,3 +312,79 @@ https://leetcode.cn/problems/integer-break/
 所以 dp[i] = max((i-j)*j, dp[i-j]\*j)
 
 当然这样还是有bug的
+
+因为这个是在循环里面的，所以其实每次计算都要取最大的自己。毕竟每一轮计算j都能得到一个dp[i]
+
+所以就可以写代码了！
+
+```cpp
+class Solution {
+public:
+    int integerBreak(int n) {
+        vector<int> dp(n + 1);
+        dp[2] = 1; // 2 可以拆分，但1确实没有意义！
+        for (int i = 3; i <= n ; i++) {
+            for (int j = 1; j <= i / 2; j++) { // i/2其实相当于掠过了一些步骤，其实这些步骤是可以略过的，这个也很好理解。
+                // dp[i] = max(dp[i], max((i - j) * j, dp[i - j] * j));
+                dp[i] = max(dp[i], max((i - j) * j, dp[i - j] * j));
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+## 不同的二叉搜索树（需要复习）
+
+https://leetcode.cn/problems/unique-binary-search-trees/description/
+
+给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的 二叉搜索树 有多少种？返回满足题意的二叉搜索树的种数。
+
+这题是有点难度，不容易想到的。这部分内容来自 Carl。
+
+首先先把 n=1, 2, 3 的情况列出来：
+
+![](https://file1.kamacoder.com/i/algo/20210107093106367.png)
+
+![](https://file1.kamacoder.com/i/algo/20210107093129889.png)
+
+是可以推出来。
+
+dp[3] 可以由 dp[2] 和 dp[1] 和 dp[0] 来推出来
+
+![](https://file1.kamacoder.com/i/algo/20210107093226241.png)
+
+感觉这里有点像二项式的展开。
+
+然后我在草稿纸上画了一下，dp[4]也是同样道理的
+
+dp[4] 这个二叉树，有可能是1，2，3，4分别做根。
+
+dp[4] 当用1作为根的时候：左子树就是 dp[0] 很容易理解，右子树就是 dp[3] \
+用2作为根的时候，同理。
+
+所以感觉可以按这思路写代码了。
+
+```cpp
+class Solution {
+public:
+    int numTrees(int n) {
+        if(n == 1) return 1;
+        std::vector<int>dp(n+1);
+        dp[0] = 1;
+        dp[1] = 1;
+        dp[2] = 2;
+        for(int i = 3; i <= n; ++i) {
+            for(int j = 1; j <= i; ++j) { // 遍历每个数作为根
+                dp[i] += dp[j-1] * dp[i-j];
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+这个题有点意思，按照思路写是可以顺利通过的。
+
+这个题需要复习，确实dp还是难啊，有些题还是挺难想到的。
