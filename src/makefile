@@ -1,4 +1,4 @@
-test:kama_0-1_Knapsack_Problem2.cc
+test:kama_Unbounded_Knapsack_Problem.cc
 	g++ -o $@ $^ -std=c++14 -g
 .PHONY:clean
 clean:

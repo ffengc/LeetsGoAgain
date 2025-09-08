@@ -809,11 +809,24 @@ https://leetcode.cn/problems/target-sum/description/
 
 所以结果就是找，填满 (sum + target)/2 背包，有几种方法。
 
-### 和之前的问题区分开来
+### 和之前的问题区分开来‼️ 为什么这里初始化不一样？
 
 之前的问题是：能否填满背包。
 
 现在的问题是：填满背包有多少种方法。
+
+第一列如何初始化，是要看清楚题目的！
+
+因为在这道题里面，weight可以为0，所以装满0的背包，可以有多种方法，所以第一列不一定完全是0。
+
+- 如果weight都是正的，那么无论value是多少，第一列都是0。这个很好理解。
+- 如果weight有可能为0，但是在题目语境中，weight和value是同一个东西
+  - 如果是问装满的数量有多少种（比如这题），那么第一列有可能是需要初始化的！不一定都是0。
+  - 如果问的能否装满，或者最大value的问题，拿第一列还是0。其实这个也很好理解！
+
+在01背包理论基础中，我们的问题是：背包最大能装多少。
+
+
 
 ### 二维数组
 
@@ -867,7 +880,7 @@ private:
             if(weight[i] == 0) zeros++;
             dp[i][0] = (int)pow(2.0, zeros);
         }
-        // 开始遍
+        // 开始遍历
         for(int i = 1; i < n; ++i) {
             for(int j = 0; j <= capacity; ++j) {
                 if(j < weight[i]) dp[i][j] = dp[i-1][j];
@@ -890,3 +903,242 @@ public:
 顺利通过。
 
 ### 一维数组
+
+```cpp
+class Solution {
+private:
+    int binaryKnapsackProblem(int capacity, std::vector<int>& weight, std::vector<int> value) {
+        int n = weight.size();
+        // 用一维数组
+        auto dp = std::vector<int>(capacity + 1, 0);
+        dp[0] = 1; // 这里需要理解，不过之前在二维数组中 dp[0][0] 就是 1
+        for(int i = 0; i < n; ++i) {
+            for(int j = capacity; j >= weight[i]; --j) {
+                dp[j] += dp[j-weight[i]];
+            }
+        }
+        return dp[capacity];
+    }
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int sum = std::accumulate(nums.begin(), nums.end(), 0);
+        if(std::abs(target) > sum) return 0;
+        if((target + sum ) % 2 == 1) return 0;
+        return binaryKnapsackProblem((target + sum) / 2, nums, nums);
+    }
+};
+```
+
+顺利通过。
+
+## 一和零（需要复习）
+
+内容来自 Carl。
+
+https://leetcode.cn/problems/ones-and-zeroes/
+
+给你一个二进制字符串数组 strs 和两个整数 m 和 n 。
+
+请你找出并返回 strs 的最大子集的长度，该子集中 最多 有 m 个 0 和 n 个 1 。
+
+如果 x 的所有元素也是 y 的元素，集合 x 是集合 y 的 子集 。
+
+**这一题其实不是多重背包。**
+
+**本题中strs 数组里的元素就是物品，每个物品都是一个！**
+
+**而m 和 n相当于是一个背包，两个维度的背包。**
+
+
+`dp[i][j]` 可以表示，在strs数组中，最多m个0n个1的最大子集的长度。
+
+`dp[i][j]` 可以由前一个strs里的字符串推导出来，strs里的字符串有zeroNum个0，oneNum个1。
+
+`dp[i][j]` 就可以是 `dp[i - zeroNum][j - oneNum] + 1`。
+
+然后我们在遍历的过程中，取dp[i][j]的最大值。
+
+所以递推公式：`dp[i][j] = max(dp[i][j], dp[i - zeroNum][j - oneNum] + 1);`
+
+此时大家可以回想一下01背包的递推公式：`dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);`
+
+对比一下就会发现，字符串的zeroNum和oneNum相当于物品的重量（weight[i]），字符串本身的个数相当于物品的价值（value[i]）。
+
+这就是一个典型的01背包！ 只不过物品的重量有了两个维度而已。
+
+```cpp
+class Solution {
+public:
+    int findMaxForm(vector<string>& strs, int m, int n) {
+        std::vector<std::vector<int>> dp(m + 1, std::vector<int>(n + 1, 0)); // 初始化为0
+        // 遍历所有物品
+        for(const auto& e : strs) {
+            // e: std::string
+            // 计算这个字符串0的个数和1的个数
+            int zeros = 0, ones = 0;
+            for(const auto& ee : e) {
+                if(ee == '0') zeros++;
+                else if(ee == '1') ones++;
+            }
+            // 处理背包
+            for(int i = m; i >= zeros; i--) {
+                for(int j = n; j >= ones; j--) {
+                    dp[i][j] = std::max(dp[i][j], dp[i-zeros][j-ones] + 1);
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+这题挺难的，需要重新复习，背包问题的理解还不够。
+
+## 完全背包理论基础-二维数组
+
+内容全部来自：https://programmercarl.com/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E5%AE%8C%E5%85%A8%E8%83%8C%E5%8C%85.html#%E5%AE%8C%E5%85%A8%E8%83%8C%E5%8C%85
+
+有N件物品和一个最多能背重量为W的背包。第i件物品的重量是weight[i]，得到的价值是value[i] 。每件物品都有无限个（也就是可以放入背包多次），求解将哪些物品装入背包里物品价值总和最大。
+
+**完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。**
+
+使用同样的例子：
+
+重量	价值 \
+物品0	1	15 \
+物品1	3	20 \
+物品2	4	30 
+
+### 确定dp数组以及下标的含义
+
+`dp[i][j]` 表示从下标为 `[0-i]` 的物品，每个物品可以取无限次，放进容量为j的背包，价值总和最大是多少。
+
+这个定义和之前的定义其实就是类似的。
+
+
+### 确定递推公式
+
+思路还是一样的，就拿 dp[1][4] 来举例子。
+
+dp[1][4]: 从下标 0-1 中的物品，放到容量为4的背包。
+
+同样可以区分为拿物品1和不拿物品1：
+- 如果不放物品1: 仍然是dp[0][4]，就是从下标0-0中的物品拿到容量为4的背包中去。
+- 如果放物品1: 这里和01背包就有区别了！！！！
+
+**如果放物品1:**
+
+在01背包中，背包先空留出物品1的容量，此时容量为1，只考虑放物品0的最大价值是 `dp[0][1]`，因为01背包每个物品只有一个，既然空出物品1，那背包中也不会再有物品1！
+
+而在完全背包中，物品是可以放无限个，所以 即使空出物品1空间重量，那背包中也可能还有物品1，所以此时我们依然考虑放 物品0 和 物品1 的最大价值即： `dp[1][1]`， 而不是 `dp[0][1]`。
+
+
+**就这里一个区别‼️**
+
+所以：`dp[1][4] = max(dp[0][4], dp[1][1] + 物品1 的价值)`
+
+所以递推公式：`dp[i][j] = max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);`
+
+### dp数组如何初始化
+
+首先从dp[i][j]的定义出发，如果背包容量j为0的话，即dp[i][0]，无论是选取哪些物品，背包价值总和一定为0。
+
+所以第一列一定是0。在这个问题下一定是0，有可能在变形问题中不一定。详情请见：[这个章节我解释了](#和之前的问题区分开来️-为什么这里初始化不一样)
+
+**记住：具体需要初始化什么，是根据递推公式来决定的！**
+
+`dp[i][j] = max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);`
+
+很明显需要 i-1, 所以 i=0 的情况都要去处理一下。
+
+`dp[0][j]`，即：存放编号0的物品的时候，各个容量的背包所能存放的最大价值。
+
+那么很明显当 `j < weight[0]` 的时候，`dp[0][j]` 应该是 0，因为背包容量比编号0的物品重量还小。
+
+当 `j >= weight[0]` 时，`dp[0][j]` 如果能放下weight[0]的话，就一直装，每一种物品有无限个。
+
+初始化代码如下所示：
+
+```cpp
+for (int i = 1; i < weight.size(); i++) {  // 当然这一步，如果把dp数组预先初始化为0了，这一步就可以省略，但很多同学应该没有想清楚这一点。
+    dp[i][0] = 0;
+}
+
+// 正序遍历，如果能放下就一直装物品0
+for (int j = weight[0]; j <= bagWeight; j++)
+    dp[0][j] = dp[0][j - weight[0]] + value[0];
+```
+
+下面这个第一行的代码有点巧妙的。它其实是对的，不一定weight[0]==1才能用，都能用的。挺巧妙。
+
+### 确定遍历顺序
+
+和01背包是一样的。
+
+### 写代码
+
+写一下完整的代码。
+
+```cpp
+
+
+// 完全背包问题
+
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+/**
+4 5
+1 2
+2 4
+3 4
+4 5
+ */
+
+int unboundedKnapsackProblem(const int &capacity, const std::vector<int> &weight, const std::vector<int> &value)
+{
+    int n = weight.size();
+    std::vector<std::vector<int>> dp(n, std::vector<int>(capacity + 1, 0));
+    // 初始化
+    // 初始化第一列，默认是0
+    // 初始化第一行
+    for (int j = weight[0]; j <= capacity; j++)
+    {
+        dp[0][j] = dp[0][j - weight[0]] + value[0];
+    }
+    // 开始dp
+    for (int i = 1; i < n; ++i)
+    {
+        for (int j = 0; j <= capacity; ++j)
+        {
+            if (j < weight[i])
+                dp[i][j] = dp[i - 1][j];
+            else
+                dp[i][j] = std::max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);
+        }
+    }
+    return dp[n - 1][capacity];
+}
+
+int main()
+{
+    int n = 0;        // 物品数量
+    int capacity = 0; // 背包能承受的重量
+    std::vector<int> weight;
+    std::vector<int> value;
+    std::cin >> n >> capacity;
+    for (int i = 0; i < n; ++i)
+    {
+        int w, v;
+        std::cin >> w >> v;
+        weight.push_back(w);
+        value.push_back(v);
+    }
+    std::cout << unboundedKnapsackProblem(capacity, weight, value) << std::endl;
+    return 0;
+}
+```
+
+顺利通过，不错！也算复习了一次背包问题的写法。
