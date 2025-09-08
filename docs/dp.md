@@ -998,6 +998,9 @@ public:
 
 内容全部来自：https://programmercarl.com/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E5%AE%8C%E5%85%A8%E8%83%8C%E5%8C%85.html#%E5%AE%8C%E5%85%A8%E8%83%8C%E5%8C%85
 
+
+题目：https://kamacoder.com/problempage.php?pid=1052
+
 有N件物品和一个最多能背重量为W的背包。第i件物品的重量是weight[i]，得到的价值是value[i] 。每件物品都有无限个（也就是可以放入背包多次），求解将哪些物品装入背包里物品价值总和最大。
 
 **完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。**
@@ -1142,3 +1145,347 @@ int main()
 ```
 
 顺利通过，不错！也算复习了一次背包问题的写法。
+
+## 完全背包理论-一维数组
+
+内容全部来自Carl: http://programmercarl.com/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E5%AE%8C%E5%85%A8%E8%83%8C%E5%8C%85%E4%B8%80%E7%BB%B4.html
+
+结论：和之前的都是一样的！
+
+**唯一的区别是：**
+
+- 一维dp数组的两个for循环先后循序一定是先遍历物品，再遍历背包容量。
+
+- 在完全背包中，对于一维dp数组来说，其实两个for循环嵌套顺序是无所谓的！
+
+试试写代码：
+
+题目：https://kamacoder.com/problempage.php?pid=1052
+
+```cpp
+int unboundedKnapsackProblem(const int &capacity, const std::vector<int> &weight, const std::vector<int> &value)
+{
+    int n = weight.size();
+    std::vector<int> dp(capacity + 1, 0);
+    for(int i = 0; i < n; ++i) {
+        for(int j = 0; j <= capacity; j++) {
+            if(j >= weight[i]) dp[j] = std::max(dp[j], dp[j-weight[i]] + value[i]);
+        }
+    }
+    return dp[capacity];
+}
+```
+
+**注意：**
+
+来自Carl。
+
+细心的同学可能发现，全文我说的都是对于纯完全背包问题，其for循环的先后循环是可以颠倒的！
+
+但如果题目稍稍有点变化，就会体现在遍历顺序上。
+
+**如果问装满背包有几种方式的话？ 那么两个for循环的先后顺序就有很大区别了，而leetcode上的题目都是这种稍有变化的类型。**
+
+这个区别，我将在后面讲解具体leetcode题目中给大家介绍，因为这块如果不结合具题目，单纯的介绍原理估计很多同学会越看越懵！
+
+**最后，又可以出一道面试题了，就是纯完全背包，要求先用二维dp数组实现，然后再用一维dp数组实现，最后再问，两个for循环的先后是否可以颠倒？为什么？**
+
+这个简单的完全背包问题，估计就可以难住不少候选人了。
+
+## 零钱兑换II
+
+https://leetcode.cn/problems/coin-change-ii/description/
+
+给你一个整数数组 coins 表示不同面额的硬币，另给一个整数 amount 表示总金额。
+
+请你计算并返回可以凑成总金额的硬币组合数。如果任何硬币组合都无法凑出总金额，返回 0 。
+
+假设每一种面额的硬币有无限个。 
+
+题目数据保证结果符合 32 位带符号整数。
+
+要注意了，这题就是前面说的：有几种装满的方法的问题。
+
+我感觉可以先自己尝试用二维数组的方法思考一下。
+
+### 二维dp自己思考
+
+经典完全背包问题的递推公式：
+
+```cpp
+dp[i][j] = std::max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);
+```
+
+但是这题是：求装满的方法有几种，不是经典的问题。
+
+所以递推公式应该是：这个具体为什么，可以看[这题](#目标和装满背包有几种方法)
+
+```cpp
+dp[i][j] = dp[i - 1][j] + dp[i][j - weight[i]];
+```
+
+**初始化：**
+
+首先先看看题目给的信息：
+
+1 <= coins.length <= 300 \
+1 <= coins[i] <= 5000 \
+coins 中的所有值 互不相同 \
+0 <= amount <= 5000
+
+硬币没有0的，所以：
+
+第一行来说，因为硬币0有无限个，所以能拿多少拿多少，当然因为他是问凑满的方法有几种，所以是可以整除的时候才能初始化为1！
+
+对于第一列来说，因为因为硬币>=1，所以应该都是0（这是我一开始想的，这是错误的❌‼️‼️）
+
+第一列应该是1，都有一种方法：就是不放！
+
+尝试写代码：
+
+
+```cpp
+class Solution {
+private:
+    int unboundedKnapsackProblem(int capacity, const std::vector<int>& nums) {
+        int n = nums.size();
+        std::vector<std::vector<uint64_t>> dp(n, std::vector<uint64_t>(capacity + 1, 0));
+        // 初始化
+        // 第一行
+        for(int j = 0; j <= capacity; j++) 
+            if(j % nums[0] == 0) dp[0][j] = 1;
+        // 第一列都是1
+        for(int i = 0; i < n; ++i) 
+            dp[i][0] = 1;
+        // dp
+        for(int i = 1; i < n; ++i) {
+            for(int j = 0; j <= capacity; j++) {
+                if(j < nums[i]) dp[i][j] = dp[i-1][j];
+                else 
+                    dp[i][j] = dp[i-1][j] + dp[i][j-nums[i]];
+            }
+        }
+        return dp[n-1][capacity];
+    }
+public:
+    int change(int amount, vector<int>& coins) {
+        return unboundedKnapsackProblem(amount, coins);
+    }
+};
+```
+
+顺利通过，其实我是可以自己写出来的。要注意的地方：
+- 就是前面初始化那里要注意下，第一列是1不是0。
+- 另外，递推公式那里，是不用最后加一个 `nums[i]` 的‼️‼️
+
+
+## 一维dp（重要！细节很多，需要复习！）
+
+首先dp公式不用说：`dp[j] += dp[j - coins[i]]`
+
+然后 dp[0] 是 1。这个也不用说，装满0的背包有一种方法：就是不用装。
+
+这里的细节在于：确认遍历顺序！
+
+**确定遍历顺序**
+
+本题中我们是外层for循环遍历物品（钱币），内层for遍历背包（金钱总额），还是外层for遍历背包（金钱总额），内层for循环遍历物品（钱币）呢？
+
+我在完全背包（一维DP）中讲解了完全背包的两个for循环的先后顺序都是可以的。
+
+但本题就不行了！
+
+**因为纯完全背包求得装满背包的最大价值是多少，和凑成总和的元素有没有顺序没关系，即：有顺序也行，没有顺序也行！‼️**
+
+**而本题要求凑成总和的组合数，元素之间明确要求没有顺序。**
+
+所以纯完全背包是能凑成总和就行，不用管怎么凑的。
+
+本题是求凑出来的方案个数，且每个方案个数是**组合数**。
+
+
+- **i在外面（也就是先遍历物品）的方式：dp[j]里计算的是组合数！‼️**
+
+- **j在外面（也就是先遍历背包容量）的方式：此时dp[j]里算出来的就是排列数！‼️**
+
+很明显这道题是需要组合数的，因为硬币没有顺序。
+
+所以直接写代码：
+
+```cpp
+class Solution {
+private:
+    int unboundedKnapsackProblem(int capacity, const std::vector<int>& nums) {
+        int n = nums.size();
+        std::vector<uint64_t> dp(capacity + 1, 0);
+        dp[0] = 1;
+        // dp
+        for(int i = 0; i < n; ++i) {
+            for(int j = 0; j <= capacity; ++j) {
+                if(j >= nums[i]) dp[j] += dp[j - nums[i]];
+            }
+        }
+        return dp[capacity];
+    }
+public:
+    int change(int amount, vector<int>& coins) {
+        return unboundedKnapsackProblem(amount, coins);
+    }
+};
+```
+
+## 组合总和 Ⅳ
+
+https://leetcode.cn/problems/combination-sum-iv/description/
+
+给你一个由 不同 整数组成的数组 nums ，和一个目标整数 target 。请你从 nums 中找出并返回总和为 target 的元素组合的个数。
+
+题目数据保证答案符合 32 位整数范围。
+
+示例 1：
+
+输入：nums = [1,2,3], target = 4
+输出：7
+解释：
+所有可能的组合为：
+(1, 1, 1, 1)
+(1, 1, 2)
+(1, 2, 1)
+(1, 3)
+(2, 1, 1)
+(2, 2)
+(3, 1)
+**请注意，顺序不同的序列被视作不同的组合。**
+
+这题也是经典的完全背包了，不过这里要找的是排列数，题目写的很清楚。然后这题是找装满背包的方法。
+
+直接写代码吧。
+
+```cpp
+class Solution {
+private:
+    int unboundedKnapsackProblem(int capacity, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<uint32_t>(capacity + 1, 0);
+        dp[0] = 1;
+        for(int j = 0; j <= capacity; j++) {
+            for(int i = 0; i < n; ++i) {
+                if(j >= nums[i]) dp[j] += dp[j - nums[i]];
+            }
+        }
+        return dp[capacity];
+    }
+public:
+    int combinationSum4(vector<int>& nums, int target) {
+        return unboundedKnapsackProblem(target,nums);
+    }
+};
+```
+
+顺利通过。
+
+## 爬楼梯（进阶版）
+
+https://kamacoder.com/problempage.php?pid=1067
+
+假设你正在爬楼梯。需要 n 阶你才能到达楼顶。 
+
+每次你可以爬至多m (1 <= m < n)个台阶。你有多少种不同的方法可以爬到楼顶呢？ 
+
+注意：给定 n 是一个正整数。
+
+输入共一行，包含两个正整数，分别表示n, m
+
+输出一个整数，表示爬到楼顶的方法数。
+
+**首先是个完全背包。然后是求装满的方法。然后是排列数。这些都很明显，不多赘述了。**
+
+直接写：
+
+```cpp
+#include <iostream>
+#include <vector>
+
+int unboundedKnapsackProblem(int target, int m) {
+    auto dp = std::vector<int>(target + 1, 0);
+    dp[0] = 1;
+    for(int j = 0; j <= target; j++) {
+        for(int i = 1; i <= m; ++i) {
+            if(j >= i) dp[j] += dp[j - i];
+        }
+    }
+    return dp[target];
+}
+
+int main() {
+    int n, m;
+    std::cin >> n >> m;
+    std::cout << unboundedKnapsackProblem(n, m) << std::endl;
+    return 0;
+}
+```
+
+顺利通过。m我就直接用了，不过如果要弄个数组也是一样的，没区别。
+
+## 零钱兑换
+
+https://leetcode.cn/problems/coin-change/description/
+
+给你一个整数数组 coins ，表示不同面额的硬币；以及一个整数 amount ，表示总金额。
+
+计算并返回可以凑成总金额所需的 **最少的硬币个数** 。如果没有任何一种硬币组合能组成总金额，返回 -1 。
+
+你可以认为每种硬币的数量是无限的。
+
+### 自己尝试
+
+首先可以确定的是，硬币数量是无限的，所以是完全背包。
+
+然后求的问题和之前不太一样，是求最少的硬币个数，那就重新推导一下。
+
+那就用 dp[j] 表示在背包容量为 j 的情况下，填满背包需要最少的物品个数是多少。
+
+那么递推公式呢：
+
+分成两种情况：
+
+- 不要物品i：那需要的个数就是：dp[j] = dp[j]
+- 需要物品i：那就是 `dp[j] = std::min(dp[j], dp[j-weight[i]] + 1)`
+  - 需要物品i的时候，就先排除物品i，然后拿多一个物品
+
+装满0的背包需要最少的物品个数是0。
+
+**遍历顺序呢？**
+
+因为是求物品的个数，所以是没区别的，都可以。
+
+尝试写下代码看看对不对：
+
+```cpp
+class Solution {
+private:
+    int unboundedKnapsackProblem(int target, std::vector<int>& coins) {
+        int n = coins.size();
+        auto dp = std::vector<long long>(target + 1, INT_MAX);
+        // 初始化
+        dp[0] = 0; // 装满0最少需要0个物品
+        for(int i = 0; i < n; ++i) {
+            for(int j = 0; j <= target; ++j) {
+                if(j >= coins[i]) dp[j] = std::min(dp[j], dp[j-coins[i]] + 1);
+            }
+        }
+        return dp[target] == INT_MAX ? -1 : dp[target];
+    }
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        return unboundedKnapsackProblem(amount, coins);
+    }
+};
+```
+
+直接通过了！
+
+这是我第一道，通过自己思考顺利一次做出来的背包问题变形题型，太爽！
+
+- 首先求最小，肯定不能初始化为0啊。
+- 然后最后如果还是INTMAX，说明根本没办法，所以按照题目要求返回-1。
