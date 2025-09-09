@@ -1,6 +1,62 @@
 
 # 动态规划
 
+- [动态规划](#动态规划)
+  - [动态规划理论基础](#动态规划理论基础)
+  - [斐波那契数](#斐波那契数)
+  - [爬楼梯（可以拓展成完全背包问题）](#爬楼梯可以拓展成完全背包问题)
+    - [拓展](#拓展)
+  - [使用最小花费爬楼梯](#使用最小花费爬楼梯)
+  - [不同路径](#不同路径)
+  - [不同路径 II](#不同路径-ii)
+  - [整数拆分（需要复习）](#整数拆分需要复习)
+  - [不同的二叉搜索树（需要复习）](#不同的二叉搜索树需要复习)
+  - [01背包理论基础](#01背包理论基础)
+    - [背包问题的分类](#背包问题的分类)
+    - [背包问题的解法](#背包问题的解法)
+      - [确定 dp 数组的含义](#确定-dp-数组的含义)
+      - [确定递推公式](#确定递推公式)
+      - [dp数组的初始化](#dp数组的初始化)
+      - [确认遍历顺序](#确认遍历顺序)
+      - [写代码](#写代码)
+  - [01背包理论基础-优化成滚动数组](#01背包理论基础-优化成滚动数组)
+    - [一维数组（滚动数组）](#一维数组滚动数组)
+    - [递推公式](#递推公式)
+    - [dp数组的初始化](#dp数组的初始化-1)
+    - [dp数组的遍历](#dp数组的遍历)
+    - [代码](#代码)
+  - [分割等和子集（01背包可以判断：是否装满的问题）](#分割等和子集01背包可以判断是否装满的问题)
+  - [最后一块石头的重量 II](#最后一块石头的重量-ii)
+  - [目标和（装满背包，有几种方法）](#目标和装满背包有几种方法)
+    - [先转化为背包问题](#先转化为背包问题)
+    - [和之前的问题区分开来‼️ 为什么这里初始化不一样？](#和之前的问题区分开来️-为什么这里初始化不一样)
+    - [二维数组](#二维数组)
+    - [一维数组](#一维数组)
+  - [一和零（需要复习）](#一和零需要复习)
+  - [完全背包理论基础-二维数组](#完全背包理论基础-二维数组)
+    - [确定dp数组以及下标的含义](#确定dp数组以及下标的含义)
+    - [确定递推公式](#确定递推公式-1)
+    - [dp数组如何初始化](#dp数组如何初始化)
+    - [确定遍历顺序](#确定遍历顺序)
+    - [写代码](#写代码-1)
+  - [完全背包理论-一维数组](#完全背包理论-一维数组)
+  - [零钱兑换II](#零钱兑换ii)
+    - [二维dp自己思考](#二维dp自己思考)
+  - [一维dp（重要！细节很多，需要复习！）](#一维dp重要细节很多需要复习)
+  - [组合总和 Ⅳ](#组合总和-ⅳ)
+  - [爬楼梯（进阶版）](#爬楼梯进阶版)
+  - [零钱兑换](#零钱兑换)
+    - [自己尝试](#自己尝试)
+  - [完全平方数](#完全平方数)
+  - [单词拆分（这个题目有点没有理解，需要复习）](#单词拆分这个题目有点没有理解需要复习)
+  - [多重背包理论基础](#多重背包理论基础)
+  - [背包问题总结篇](#背包问题总结篇)
+    - [递推公式](#递推公式-1)
+    - [遍历顺序](#遍历顺序)
+      - [01背包](#01背包)
+      - [完全背包](#完全背包)
+
+
 复制这里：
 
 **确定 dp 数组以及其下标的含义：**
@@ -1489,3 +1545,305 @@ public:
 
 - 首先求最小，肯定不能初始化为0啊。
 - 然后最后如果还是INTMAX，说明根本没办法，所以按照题目要求返回-1。
+
+## 完全平方数
+
+https://leetcode.cn/problems/perfect-squares/description/
+
+
+给你一个整数 n ，返回 和为 n 的完全平方数的最少数量 。
+
+完全平方数 是一个整数，其值等于另一个整数的平方；换句话说，其值等于一个整数自乘的积。例如，1、4、9 和 16 都是完全平方数，而 3 和 11 不是。
+
+1 <= n <= 10^4
+
+就是一个完全背包问题，target就是整数n，然后nums就是一些完全平方数。
+
+这个题是求最小数量，这就是和上面那道题是同一个道理啊。
+
+很简单，直接先试下写代码。
+
+```cpp
+class Solution {
+private:
+    int unboundedKnapsackProblem(int target, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<int>(target + 1, INT_MAX);
+        dp[0] = 0; // 装满容量为0的背包最少需要0个物品
+        // 因为是求数量，所以无论是组合还是排列都是正确的
+        for(int i = 0; i < n; ++i) {
+            for(int j = 0; j <= target; ++j) {
+                if(j >= nums[i]) dp[j] = std::min(dp[j], dp[j-nums[i]] + 1);
+            }
+        }
+        return dp[target] == INT_MAX ? -1 : dp[target];
+    }
+public:
+    int numSquares(int n) {
+        // 1 <= n <= 10^4
+        // O(n)
+        std::vector<int> nums;
+        for(int i = 1; ;++i)
+            if(i * i <= n) nums.push_back(i * i);
+            else break;
+        // 12
+        // debug
+        // for(const auto& e : nums) 
+        //     std::cout << e << " ";
+        // 完全背包问题
+        return unboundedKnapsackProblem(n, nums);
+        // return 0;
+    }
+};
+```
+
+思路没问题。对比Carl的方法，我多了一次 O(n) 的遍历。但是因为数量级最后就是 O(n)。我这样写会比较清晰，可以清晰看到物品的list是什么。
+
+## 单词拆分（这个题目有点没有理解，需要复习）
+
+https://leetcode.cn/problems/word-break/description/
+
+给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。
+
+注意：不要求字典中出现的单词全部都使用，并且字典中的单词可以重复使用。
+
+ 
+
+示例 1：
+
+输入: s = "leetcode", wordDict = ["leet", "code"]
+输出: true
+解释: 返回 true 因为 "leetcode" 可以由 "leet" 和 "code" 拼接成。
+
+这个是完全背包的变形问题。
+
+这题一下没想出来，用dp五部曲里尝试一下。
+
+**确定dp数组的含义：**
+
+dp[i]表示，字符串长度为i，且这个字符串可以由 `wordDict` 中的内容构成。
+
+**确定dp的递推公式：**
+
+如果dp[j]是true，而且 [j, i] 区间这个字符串在 `wordDict` 中是有的，这种情况下 dp[i] 是为 true
+
+**dp数组如何初始化**
+
+从递推公式中可以看出，dp[i] 的状态依靠 dp[j]是否为true，那么dp[0]就是递推的根基，dp[0]一定要为true，否则递推下去后面都都是false了。
+
+**遍历顺序如何**
+
+很明显这道题是求排列的。跟顺序是有关系的。
+
+写一下代码：
+
+```cpp
+class Solution {
+private:
+    bool unboundedKnapsackProblem(const std::string& target, const std::vector<string>& wordDict) {
+        std::unordered_set<std::string> sset(wordDict.begin(), wordDict.end());
+        int n = wordDict.size();
+        auto dp = std::vector<bool>(target.size() + 1, false);
+        dp[0] = true; // 这里要注意，不然后面全是 false 了
+        for(int j = 1; j <= target.size(); j++) { // 遍历背包
+            for(int i = 0; i < j; i++) {
+                std::string str = target.substr(i, j - i);
+                if(sset.find(str) != sset.end() && dp[i]) dp[j] = true;
+            }
+        }
+        return dp[target.size()];
+    }
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        return unboundedKnapsackProblem(s, wordDict);
+    }
+};
+```
+
+## 多重背包理论基础
+
+内容来自Carl: https://programmercarl.com/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E5%A4%9A%E9%87%8D%E8%83%8C%E5%8C%85.html#%E5%A4%9A%E9%87%8D%E8%83%8C%E5%8C%85
+
+题目：[56. 携带矿石资源（第八期模拟笔试）](https://kamacoder.com/problempage.php?pid=1066)
+
+有 `N` 种物品和一个容量为 `V` 的背包。第i种物品最多有 `Mi` 件可用，每件耗费的空间是 `Ci`，价值是 `Wi`。求解将哪些物品装入背包可使这些物品的耗费的空间总和不超过背包容量，且价值总和最大。
+
+多重背包和01背包是非常像的，为什么和01背包像呢？
+
+每件物品最多有 `Mi` 件可用，把 `Mi` 件摊开，其实就是一个01背包问题了。
+
+| 物品   | 重量 | 价值 | 数量 |
+|--------|------|------|------|
+| 物品0 | 1    | 15   | 2    |
+| 物品1 | 3    | 20   | 3    |
+| 物品2 | 4    | 30   | 2    |
+
+展开成：
+
+| 物品   | 重量 | 价值 | 数量 |
+|--------|------|------|------|
+| 物品0 | 1    | 15   | 1    |
+| 物品0 | 1    | 15   | 1    |
+| 物品1 | 3    | 20   | 1    |
+| 物品1 | 3    | 20   | 1    |
+| 物品1 | 3    | 20   | 1    |
+| 物品2 | 4    | 30   | 1    |
+| 物品2 | 4    | 30   | 1    |
+
+就变成01背包了！
+
+**题目：[56. 携带矿石资源（第八期模拟笔试）](https://kamacoder.com/problempage.php?pid=1066)**
+
+你是一名宇航员，即将前往一个遥远的行星。在这个行星上，有许多不同类型的矿石资源，每种矿石都有不同的重要性和价值。你需要选择哪些矿石带回地球，但你的宇航舱有一定的容量限制。 
+
+给定一个宇航舱，最大容量为 C。现在有 N 种不同类型的矿石，每种矿石有一个重量 w[i]，一个价值 v[i]，以及最多 k[i] 个可用。不同类型的矿石在地球上的市场价值不同。你需要计算如何在不超过宇航舱容量的情况下，最大化你所能获取的总价值。
+
+输入：
+
+10 3 \
+1 3 4 \
+15 20 30 \
+2 3 2
+
+输出：
+
+90
+
+```cpp
+#include <iostream>
+#include <vector>
+
+int boundedKnapsackProblem(int capacity, 
+                            const std::vector<int>& weight,
+                            const std::vector<int>& value,
+                            const std::vector<int>& quantity) {
+    // 先展开成01背包问题
+    int n = weight.size();
+    std::vector<int> new_weight;
+    std::vector<int> new_value;
+    for(int i = 0; i < n; ++i) {
+        int cnt = quantity[i];
+        for(int j = 0; j < cnt; ++j) {
+            new_weight.push_back(weight[i]);
+            new_value.push_back(value[i]);
+        }
+    }
+    // 01背包问题
+    n = new_weight.size();
+    auto dp = std::vector<int>(capacity + 1, 0);
+    for(int i = 0; i < n; ++i) {
+        for(int j = capacity; j >= new_weight[i]; --j) {
+            dp[j] = std::max(dp[j], dp[j-new_weight[i]] + new_value[i]);
+        }
+    }
+    return dp[capacity];
+}
+
+
+int main() {
+    int capacity = 0, n = 0;
+    std::cin >> capacity >> n;
+    std::vector<int> weight;
+    std::vector<int> value;
+    std::vector<int> quantity;
+    // input weight
+    for(int i = 0; i < n; ++i) {
+        int x = 0;
+        std::cin >> x;
+        weight.push_back(x);
+    }
+    // input value
+    for(int i = 0; i < n; ++i) {
+        int x = 0;
+        std::cin >> x;
+        value.push_back(x);
+    }   
+    // input quantity
+    for(int i = 0; i < n; ++i) {
+        int x = 0;
+        std::cin >> x;
+        quantity.push_back(x);
+    }    
+    // Bounded Knapsack Problem (BKP)
+    std::cout << boundedKnapsackProblem(capacity, weight, value, quantity) << std::endl; 
+    return 0;
+}
+```
+
+运行通过，这个没问题，就是在01背包上多加上一步而已。
+
+当然，也可以用Carl的方法，在遍历的时候展开。
+
+```cpp
+    for(int i = 0; i < n; i++) { // 遍历物品
+        for(int j = bagWeight; j >= weight[i]; j--) { // 遍历背包容量
+            // 以上为01背包，然后加一个遍历个数
+            for (int k = 1; k <= nums[i] && (j - k * weight[i]) >= 0; k++) { // 遍历个数
+                dp[j] = max(dp[j], dp[j - k * weight[i]] + k * value[i]);
+            }
+        }
+    }
+```
+
+不过我的方法应该是更好理解一些的。
+
+## 背包问题总结篇
+
+### 递推公式
+
+问能否能装满背包（或者最多装多少）：`dp[j] = max(dp[j], dp[j - nums[i]] + nums[i]);` ，对应题目如下：
+- [416. 分割等和子集](#分割等和子集01背包可以判断是否装满的问题)
+- [1049. 最后一块石头的重量II](#最后一块石头的重量-ii)
+
+问装满背包有几种方法：`dp[j] += dp[j - nums[i]]` ，对应题目如下：
+- [494. 目标和](#目标和装满背包有几种方法)
+- [518. 零钱兑换 II](#零钱兑换ii)
+- [377. 组合总和Ⅳ](#组合总和-ⅳ)
+- [70. 爬楼梯进阶版（完全背包）](#爬楼梯进阶版)
+
+问背包装满最大价值：`dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);` 对应题目如下：
+
+- [474. 一和零](#一和零需要复习)
+
+问装满背包所有物品的最小个数：`dp[j] = min(dp[j - coins[i]] + 1, dp[j]);` 对应题目如下：
+
+- [322. 零钱兑换](#零钱兑换)
+- [279. 完全平方数](#完全平方数)
+
+### 遍历顺序
+
+#### 01背包
+
+- 二维dp数组解决01背包：先遍历物品还是先遍历背包都是可以的，且第二层for循环是从小到大遍历。
+
+- 一维dp数组解决01背包：只能先遍历物品再遍历背包容量，且第二层for循环是从大到小遍历。
+
+**一维dp数组的背包在遍历顺序上和二维dp数组实现的01背包其实是有很大差异的，大家需要注意！**
+
+#### 完全背包
+
+- 纯完全背包的一维dp数组实现，先遍历物品还是先遍历背包都是可以的，且第二层for循环是从小到大遍历。
+
+**但是仅仅是纯完全背包的遍历顺序是这样的，题目稍有变化，两个for循环的先后顺序就不一样了。**
+
+- 如果求**组合数**就是外层for循环遍历物品，内层for遍历背包。
+
+- 如果求**排列数**就是外层for遍历背包，内层for循环遍历物品。
+
+**相关题目如下：**
+
+求组合数：
+- [518. 零钱兑换II](#零钱兑换ii)
+
+求排列数：
+- [377. 组合总和Ⅳ](#组合总和-ⅳ)
+- [70. 爬楼梯进阶版](#爬楼梯进阶版)
+
+如果求最小数，那么两层for循环的先后顺序就无所谓了，相关题目如下：
+
+求最小数：
+- [322. 零钱兑换](#零钱兑换)
+- [279. 完全平方数](#完全平方数)
+
+对于背包问题，其实递推公式算是容易的，难是难在遍历顺序上，如果把遍历顺序搞透，才算是真正理解了。
+
