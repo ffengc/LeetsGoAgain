@@ -55,6 +55,20 @@
     - [遍历顺序](#遍历顺序)
       - [01背包](#01背包)
       - [完全背包](#完全背包)
+  - [打家劫舍系列](#打家劫舍系列)
+    - [打家劫舍](#打家劫舍)
+    - [打家劫舍II（成环应该如何解决）](#打家劫舍ii成环应该如何解决)
+    - [打家劫舍III（需要复习）](#打家劫舍iii需要复习)
+      - [暴力解法](#暴力解法)
+      - [记忆化暴力解法](#记忆化暴力解法)
+      - [动态规划](#动态规划-1)
+  - [买卖股票系列题目](#买卖股票系列题目)
+    - [买卖股票的最佳时机](#买卖股票的最佳时机)
+    - [买卖股票的最佳时机II](#买卖股票的最佳时机ii)
+    - [买卖股票的最佳时机III](#买卖股票的最佳时机iii)
+    - [买卖股票的最佳时机IV](#买卖股票的最佳时机iv)
+    - [买卖股票的最佳时机含手续费](#买卖股票的最佳时机含手续费)
+    - [买卖股票的最佳时机含冷冻期](#买卖股票的最佳时机含冷冻期)
 
 
 复制这里：
@@ -1847,3 +1861,516 @@ int main() {
 
 对于背包问题，其实递推公式算是容易的，难是难在遍历顺序上，如果把遍历顺序搞透，才算是真正理解了。
 
+## 打家劫舍系列
+
+### 打家劫舍
+
+https://leetcode.cn/problems/house-robber/
+
+你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你 不触动警报装置的情况下 ，一夜之内能够偷窃到的最高金额。
+
+示例 1：
+
+输入：[1,2,3,1]
+输出：4
+解释：偷窃 1 号房屋 (金额 = 1) ，然后偷窃 3 号房屋 (金额 = 3)。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+
+这个题还是很简单的，比较容易能想到。
+
+dp[i] 表示从0-i中打劫，最多获得的金额是多少
+
+`dp[i] = max(dp[i-2] + nums[i], dp[i-1])` 其实就是表示两种状态就行了，表示i到底是要还是不要。
+
+这个递推公式还是很简单的。
+
+然后初始化也是比较简单，`dp[0]`一定是 `nums[0]`, `dp[1]` 一定是 `nums[1]`。
+
+```cpp
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size(), 0);
+        dp[0] = nums[0]; dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)    
+            dp[i] = std::max(dp[i-2] + nums[i], dp[i-1]);
+        return dp[nums.size()-1];
+    }
+};
+```
+顺利通过。
+
+### 打家劫舍II（成环应该如何解决）
+
+https://leetcode.cn/problems/house-robber-ii/description/ 
+
+你是一个专业的小偷，计划偷窃沿街的房屋，每间房内都藏有一定的现金。这个地方所有的房屋都围成一圈 ，这意味着第一个房屋和最后一个房屋是紧挨着的。同时，相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你在不触动警报装置的情况下，今晚能够偷窃到的最高金额。
+
+输入：nums = [2,3,2]
+输出：3
+解释：你不能先偷窃 1 号房屋（金额 = 2），然后偷窃 3 号房屋（金额 = 2）, 因为他们是相邻的。
+
+这里的思路参考了一下Carl。
+
+分成两种情况。
+
+- 如果不考虑尾元素，那么首元素无论选不选，都是无所谓的。
+- 如果不考虑首元素，那么尾元素选不选，都是无所谓的。
+
+其实我还没完完全理解这个东西的原理，只理解了个大概。先写下代码吧。
+
+```cpp
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto result1 = _rob(std::vector<int>(nums.begin(), nums.end()-1));
+        auto result2 = _rob(std::vector<int>(nums.begin()+1, nums.end()));
+        return std::max(result1, result2);
+    }
+    int _rob(vector<int> nums) {
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size(), 0);
+        dp[0] = nums[0]; dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)    
+            dp[i] = std::max(dp[i-2] + nums[i], dp[i-1]);
+        return dp[nums.size()-1];
+    }
+};
+```
+
+顺利通过。
+
+### 打家劫舍III（需要复习）
+
+https://leetcode.cn/problems/house-robber-iii/
+
+小偷又发现了一个新的可行窃的地区。这个地区只有一个入口，我们称之为 root 。
+
+除了 root 之外，每栋房子有且只有一个“父“房子与之相连。一番侦察之后，聪明的小偷意识到“这个地方的所有房屋的排列类似于一棵二叉树”。 如果 两个直接相连的房子在同一天晚上被打劫 ，房屋将自动报警。
+
+给定二叉树的 root 。返回 在不触动警报的情况下 ，小偷能够盗取的最高金额 。
+
+![](https://assets.leetcode.com/uploads/2021/03/10/rob1-tree.jpg)
+
+输入: root = [3,2,3,null,3,null,1]
+输出: 7 
+解释: 小偷一晚能够盗取的最高金额 3 + 3 + 1 = 7
+
+首先，这个题肯定是需要获得左右递归函数的值才能进行后续操作，所以一定是后序遍历。
+
+因为需要左右的结果，这种题一定是后序遍历！
+
+然后，最核心的思想，就是分成两种：
+1. 偷当前节点
+2. 不偷当前节点
+
+#### 暴力解法
+
+```cpp
+class Solution {
+public:
+    int rob(TreeNode* root) {
+        if(root == nullptr) return 0;
+        if(root->left == nullptr && root->right == nullptr) return root->val;
+        // 选择偷当前节点
+        int val1 = root->val;
+        if(root->left)
+            val1 += rob(root->left->left) + rob(root->left->right); // 不能左右孩子了
+        if(root->right)
+            val1 += rob(root->right->left) + rob(root->right->right);
+        // 不偷当前节点
+        int val2 = rob(root->left) + rob(root->right);
+        return std::max(val1, val2);
+    }
+};
+```
+
+可以通过，但超出时间。
+
+#### 记忆化暴力解法
+
+因为在上面这个方法中，rob会被多次调用递归。如果这个 rob(root) 的结果已经被计算过了，就不用重复计算了。
+
+```cpp
+class Solution {
+public:
+    unordered_map<TreeNode*, int> mmap;
+    int rob(TreeNode* root) {
+        if(root == nullptr) return 0;
+        if(root->left == nullptr && root->right == nullptr) return root->val;
+        if(mmap[root]) return mmap[root]; // 这里是可以不用find的
+        // mmap[root]调用会导致在这里创建了一个 mmap[root]，但是也无所谓，因为后面这里也一定会被创建的
+        // 选择偷当前节点
+        int val1 = root->val;
+        if(root->left)
+            val1 += rob(root->left->left) + rob(root->left->right); // 不能左右孩子了
+        if(root->right)
+            val1 += rob(root->right->left) + rob(root->right->right);
+        // 不偷当前节点
+        int val2 = rob(root->left) + rob(root->right);
+        mmap[root] = std::max(val1, val2);
+        return std::max(val1, val2);
+    }
+};
+```
+
+这样是可以通过的。
+
+#### 动态规划
+
+其实本质是一样的。
+
+在数组里面，遍历就是for循环遍历。在这里，遍历就是递归遍历。
+
+核心思路：用一个 pair 来记录，pair.first 表示不偷当前节点的结果。 pair.second 表示偷当前节点的结果。
+
+代码：
+
+```cpp
+class Solution {
+public:
+    int rob(TreeNode* root) {
+        auto p = _rob(root);
+        return std::max(p.first, p.second);
+    }
+    std::pair<int,int> _rob(TreeNode* root) {
+        if(root == nullptr) return {0, 0}; // 如果当前节点为空，取不取都是0
+        auto left = _rob(root->left);
+        auto right = _rob(root->right);
+        // 偷cur，那么就不能偷左右节点。
+        int val1 = root->val + left.first + right.first;
+        // 不偷cur，那么可以偷也可以不偷左右节点，则取较大的情况
+        int val2 = max(left.first, left.second) + max(right.first, right.second);
+        return {val2, val1};
+    }
+};
+```
+
+这个代码有点意思，要好好复习。
+
+## 买卖股票系列题目
+
+- 买卖股票的最佳时机
+- 买卖股票的最佳时机II
+- 买卖股票的最佳时机 III
+- 买卖股票的最佳时机 IV
+- 买卖股票的最佳时机含手续费
+- 买卖股票的最佳时机含冷冻期
+
+### 买卖股票的最佳时机
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/description/
+
+这种题型是一定要学习和掌握的。
+
+按照Carl的思路先学习。
+
+**股票问题：创建一个两列的dp数组。**
+
+**dp数组的含义**
+
+`dp[i][0]` 表示第i天持有股票所得最多现金。
+
+其实一开始现金是0，那么加入第i天买入股票现金就是 -prices[i]， 这是一个负数。
+
+`dp[i][1]` 表示第i天不持有股票所得最多现金
+
+注意这里说的是“持有”，“持有”不代表就是当天“买入”！也有可能是昨天就买入了，今天保持持有的状态。
+
+**递推公式：**
+
+如果第i天持有股票即 `dp[i][0]`， 那么可以由两个状态推出来:
+
+- 第i-1天就持有股票，那么就保持现状，所得现金就是昨天持有股票的所得现金 即：`dp[i - 1][0]`
+- 第i天买入股票，所得现金就是买入今天的股票后所得现金即：-prices[i]
+
+那么dp[i][0]应该选所得现金最大的，所以` dp[i][0] = max(dp[i - 1][0], -prices[i]);`
+
+如果第i天不持有股票即`dp[i][1]`， 也可以由两个状态推出来
+
+第i-1天就不持有股票，那么就保持现状，所得现金就是昨天不持有股票的所得现金 即：`dp[i - 1][1]`
+第i天卖出股票，所得现金就是按照今天股票价格卖出后所得现金即：`prices[i] + dp[i - 1][0]`
+同样`dp[i][1]`取最大的，`dp[i][1] = max(dp[i - 1][1], prices[i] + dp[i - 1][0]);`
+
+初始化其实也挺简单。
+
+dp[0][0] 表示第0天买股，所以就是 -prices[0]
+
+dp[0][1] 表示第一天不买股，所以就是现金0。
+
+从递推公式可以看出，dp[i]只是依赖于dp[i - 1]的状态。
+
+先尝试写代码。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(2)); // n行2列
+        dp[0][0] = -prices[0];
+        dp[0][1] = 0;
+        for(int i = 1; i < prices.size(); ++i) {
+            dp[i][0] = std::max(-prices[i], dp[i-1][0]);
+            dp[i][1] = std::max(dp[i-1][1], dp[i-1][0] + prices[i]);
+        }
+        return dp[prices.size()-1][1]; // 不持有股票一定是有更多钱的
+    }
+};
+```
+
+### 买卖股票的最佳时机II
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/
+
+给你一个整数数组 prices ，其中 prices[i] 表示某支股票第 i 天的价格。
+
+在每一天，你可以决定是否购买和/或出售股票。**你在任何时候 最多 只能持有 一股 股票**。你也可以先购买，然后在 同一天 出售。
+
+返回 你能获得的 最大 利润 。
+
+其实这一系列问题都是同样的思路。
+
+和上一题的区别：
+- 因为上一题只能买一次，所以如果当天买，现金一定是`-prize[i]`
+- 但这题可以买多次，所以如果当天买，可能身上已经有钱了。这题说手上只能有一支股票，所以如果当天买，一定是从“没有股票”的状态中推导来的：`dp[i][1]-prize[i]`
+
+简简单单，直接写代码。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(2));
+        dp[0][0] = -prices[0];
+        dp[0][1] = 0;
+        for(int i = 1; i < prices.size(); ++i) {
+            dp[i][0] = std::max(dp[i-1][0], dp[i-1][1] - prices[i]);
+            dp[i][1] = std::max(dp[i-1][1], dp[i-1][0] + prices[i]);
+        }
+        return dp[prices.size()-1][1];
+    }
+};
+```
+
+顺利通过。
+
+### 买卖股票的最佳时机III
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/description/
+
+这题还是比之前难了很多的。
+
+主要是题目限制只能买两次。也就是最好的结果可能是：不买、买一次、买两次的其中之一。
+
+解题思路是，弄5个状态（前面两个题是两个状态）。
+
+其实感觉这种思路是有状态机的感觉。
+
+5个状态：
+1. 没有买
+2. 第一次持有
+3. 第一次持有后卖了
+4. 第二次持有
+5. 第二次持有后卖了
+
+初始化的时候要注意一下
+
+- dp[0][0]表示没买，那就是0
+- dp[0][1]表示第一次买了，那就是 -price[0]
+- dp[0][2]表示在第一天，买了又卖了，现金就是0
+- dp[0][3]表示第一天，买了卖了又买了，-price[0]
+- dp[0][4]同理，0
+
+尝试写代码。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(5));
+        dp[0][0] = 0; // 没买
+        dp[0][1] = -prices[0]; // 第一次买
+        dp[0][2] = 0; // 第一次卖
+        dp[0][3] = -prices[0]; // 第二次买了
+        dp[0][4] = 0; // 最后卖了
+        for(int i = 1; i < prices.size(); ++i) {
+            dp[i][0] = dp[i-1][0]; // 一开始就不买，只能一开始就不买
+            dp[i][1] = std::max(dp[i-1][1], dp[i][0] - prices[i]);
+            dp[i][2] = std::max(dp[i-1][2], dp[i][1] + prices[i]);
+            dp[i][3] = std::max(dp[i-1][3], dp[i][2] - prices[i]);
+            dp[i][4] = std::max(dp[i-1][4], dp[i][3] + prices[i]);
+        }
+        return std::max(dp[prices.size()-1][4], std::max(dp[prices.size()-1][2], dp[prices.size()-1][0]));
+    }
+};  
+```
+
+顺利通过。
+
+### 买卖股票的最佳时机IV
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/description/
+
+限制两次变成限制k次了。
+
+可以参考上面的代码来尝试写一下，因为上面代码其实还是很规整的，可以泛化感觉。
+
+这样确实可以通过。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(2*k+1));
+        // 初始化 
+        for(int i = 0; i <= 2*k; ++i) {
+            if(i % 2 == 0) dp[0][i] = 0;
+            else dp[0][i] = -prices[0];
+        }
+        // dp
+        for(int i = 1; i < prices.size(); ++i) {
+            for(int j = 0; j <= 2*k; ++j) {
+                if(j == 0) {
+                    dp[i][j] = dp[i-1][j]; // 一开始就不买
+                    continue;
+                }
+                if(j % 2 == 1) dp[i][j] = std::max(dp[i-1][j], dp[i][j-1] - prices[i]);
+                else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1] + prices[i]);
+            }
+        }
+        return *max_element(dp[prices.size()-1].begin(), dp[prices.size()-1].end());
+    }
+};
+```
+
+但是如果一开始不做前面的题做这个，那真的太难了。不可能想到。
+
+然后确实Carl也是同样这个方法。
+
+
+### 买卖股票的最佳时机含手续费
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/description/
+
+给定一个整数数组prices，其中第  prices[i] 表示第 i 天的股票价格 。​
+
+设计一个算法计算出最大利润。在满足以下约束条件下，你可以尽可能地完成更多的交易（多次买卖一支股票）:
+
+卖出股票后，你无法在第二天买入股票 (即冷冻期为 1 天)。
+注意：你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+
+做到这里其实发现了，股票问题，就是把状态弄清楚就很简单了。
+
+这里分成四个状态
+1. 身上有股票
+2. 身上没有股票（两天前就卖出了股票，度过一天冷冻期。或者是之前就是卖出股票状态，一直没操作）
+3. 身上没有股票（今天刚卖）
+4. 身上没有股票（昨天刚卖，今天冷冻期）
+
+把递推公式弄清楚就行了。
+
+**达到买入股票状态（状态一）即：`dp[i][0]`，有两个具体操作：**
+
+- 操作一：前一天就是持有股票状态（状态一），dp[i][0] = dp[i - 1][0]
+- 操作二：今天买入了，有两种情况
+  - 前一天是冷冻期（状态四），`dp[i - 1][3] - prices[i]` （冷冻期刚过就买）
+  - 前一天是保持卖出股票的状态（状态二），`dp[i - 1][1] - prices[i]`（冷冻期过了一段时间了，今天才买）
+
+那么 `dp[i][0] = max(dp[i - 1][0], dp[i - 1][3] - prices[i], dp[i - 1][1] - prices[i]);`
+
+**达到保持卖出股票状态（状态二）即：`dp[i][1]`，有两个具体操作**：
+
+- 操作一：前一天就是状态二
+- 操作二：前一天是冷冻期（状态四）
+- `dp[i][1] = max(dp[i - 1][1], dp[i - 1][3]);`
+
+**达到今天就卖出股票状态（状态三），即：`dp[i][2]`，只有一个操作**：
+
+昨天一定是持有股票状态（状态一），今天卖出
+
+`即：dp[i][2] = dp[i - 1][0] + prices[i];`
+
+**达到冷冻期状态（状态四），即：`dp[i][3]`，只有一个操作：**
+
+昨天卖出了股票（状态三）
+
+`dp[i][3] = dp[i - 1][2];`
+
+
+写代码就可以了，搞清楚四个状态就很简单了。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        // 0. 身上有股票
+        // 1. 身上没有股票（两天前就卖出了股票，度过一天冷冻期。或者是之前就是卖出股票状态，一直没操作）
+        // 2. 身上没有股票（今天刚卖）
+        // 3. 身上没有股票（昨天刚卖，今天冷冻期）
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(4));
+        dp[0][0] = -prices[0];
+        dp[0][1] = 0; dp[0][2] = 0; dp[0][3] = 0; // 其实这几个都不好说，但是设置成其他，就会出问题，所以设置成0，这里还要琢磨下
+        for(int i = 1; i < prices.size(); ++i) {
+            // 有股票: 1. 本来就有 2. 今天刚过冷冻期就买 3. 今天买（但过了冷冻期一天以上）
+            dp[i][0] = std::max(dp[i-1][0], std::max(dp[i-1][3]-prices[i], dp[i-1][1]-prices[i]));
+            dp[i][1] = std::max(dp[i-1][3], dp[i-1][1]);
+            dp[i][2] = dp[i-1][0] + prices[i];
+            dp[i][3] = dp[i-1][2];
+        }
+        return *max_element(dp[prices.size()-1].begin(), dp[prices.size()-1].end());
+    }
+};
+```
+
+顺利通过。
+
+状态太重要了。股票问题就是搞清楚状态！
+
+### 买卖股票的最佳时机含冷冻期
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/description/
+
+注意：这里的一笔交易指买入持有并卖出股票的整个过程，每笔交易你只需要为支付一次手续费。
+
+emm，其实这题我的思路是，因为最后股票肯定要卖掉是最好的，所以我设置在卖掉的时候交手续费。
+
+状态:
+
+0. 没有股票
+1. 手上有股票
+
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices, int fee) {
+        if(prices.size() == 0) return 0;
+        auto dp = std::vector<std::vector<int>>(prices.size(), std::vector<int>(2));
+        dp[0][0] = 0; // 手上无
+        dp[0][1] = -prices[0]; // 手上有
+        for(int i = 1; i < prices.size(); ++i) {
+            dp[i][0] = std::max(dp[i-1][0], dp[i-1][1] + prices[i] - fee);
+            dp[i][1] = std::max(dp[i-1][1], dp[i-1][0] - prices[i]);
+        }
+        return dp[prices.size()-1][0];
+    }
+};
+```
+
+然后确实我的思路是对的，顺利通过了。
+
+**股票问题总结：状态很重要！股票问题的核心就是状态！**
