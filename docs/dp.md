@@ -69,6 +69,23 @@
     - [买卖股票的最佳时机IV](#买卖股票的最佳时机iv)
     - [买卖股票的最佳时机含手续费](#买卖股票的最佳时机含手续费)
     - [买卖股票的最佳时机含冷冻期](#买卖股票的最佳时机含冷冻期)
+  - [最长递增子序列](#最长递增子序列)
+  - [最长连续递增序列](#最长连续递增序列)
+  - [最长重复子数组（需要复习，经典题目）](#最长重复子数组需要复习经典题目)
+    - [确定dp数组含义](#确定dp数组含义)
+    - [确定递推公式](#确定递推公式-2)
+    - [dp数组的初始化](#dp数组的初始化-2)
+    - [确认遍历顺序](#确认遍历顺序-1)
+    - [二维数组版本代码](#二维数组版本代码)
+    - [滚动数组](#滚动数组)
+    - [拓展](#拓展-1)
+  - [最长公共子序列](#最长公共子序列)
+  - [不相交的线](#不相交的线)
+  - [最大子数组和](#最大子数组和)
+  - [判断子序列（需要复习）](#判断子序列需要复习)
+  - [不同的子序列（难）](#不同的子序列难)
+    - [dp数组的含义](#dp数组的含义)
+    - [确定递推公式](#确定递推公式-3)
 
 
 复制这里：
@@ -2374,3 +2391,394 @@ public:
 然后确实我的思路是对的，顺利通过了。
 
 **股票问题总结：状态很重要！股票问题的核心就是状态！**
+
+## 最长递增子序列
+
+https://leetcode.cn/problems/longest-increasing-subsequence/
+
+给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。
+
+子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。
+
+
+一开始我在想，有没有一个可以遍历一次就得到结果的方法，发现最后其实还是要有内层循环。
+
+这个题思路比较简单感觉，我直接写代码。
+
+
+```cpp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        if(nums.size() == 0) return 0;
+        if(nums.size() == 1) return 1;
+        auto dp = std::vector<int>(nums.size(), 1); // 注意，这里要初始化为1
+        // dp[i]表示以nums[i]结尾的最长递增子序列
+        dp[0] = 1;
+        int result = -1;
+        for(int i = 1; i < nums.size(); ++i) {
+            for(int j = 0; j < i; j++) {
+                if(nums[i] > nums[j]) {
+                    // 可以把i放到以j结尾的最长递增子序列上
+                    dp[i] = std::max(dp[i], dp[j] + 1);
+                }
+            }
+            if(dp[i] > result) result = dp[i]; // 因为最好的结果不一定在dp数组的最后
+            // 因为最长递增子序列不一定是用到结尾的数字，很好理解
+        }
+        return result;
+    }
+};
+```
+
+顺利通过，细节可以见代码。
+
+## 最长连续递增序列
+
+https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/
+
+给定一个未经排序的整数数组，找到最长且 连续递增的子序列，并返回该序列的长度。
+
+连续递增的子序列 可以由两个下标 l 和 r（l < r）确定，如果对于每个 l <= i < r，都有 nums[i] < nums[i + 1] ，那么子序列 [nums[l], nums[l + 1], ..., nums[r - 1], nums[r]] 就是连续递增子序列。
+
+这个题感觉很简单，直接写。
+
+```cpp
+class Solution {
+public:
+    int findLengthOfLCIS(vector<int>& nums) {
+        if(nums.size() == 0) return 0;
+        if(nums.size() == 1) return 1;
+        int result = 0;
+        auto dp = std::vector<int>(nums.size(), 1);
+        for(int i = 1; i < nums.size(); ++i) {
+            if(nums[i] > nums[i-1]) dp[i] = dp[i-1] + 1;
+            if(dp[i] > result) result = dp[i];
+        }
+        return result;
+    }
+};
+```
+
+顺利通过。很简单。
+
+
+## 最长重复子数组（需要复习，经典题目）
+
+https://leetcode.cn/problems/maximum-length-of-repeated-subarray/
+
+给两个整数数组 nums1 和 nums2 ，返回 两个数组中 公共的 、长度最长的子数组的长度 。
+
+示例 1：
+
+输入：nums1 = [1,2,3,2,1], nums2 = [3,2,1,4,7]
+输出：3
+解释：长度最长的公共子数组是 [3,2,1] 。
+
+这个题是不简单的，要好好学习这个思路。
+
+本题内容全部来自 Carl。
+
+### 确定dp数组含义
+
+`dp[i][j]`: 以下标 `i - 1` 为结尾的A，和以下标 `j - 1` 为结尾的B，最长重复子数组长度为 `dp[i][j]`。(特别注意： “以下标 `i - 1` 为结尾的A” 标明一定是 以 `A[i-1]` 为结尾的字符串)
+
+那`dp[0][0]`好像就没有意义了。所以其实是从1开始遍历。
+
+> [!TIP]
+> 为什么`dp[i][j]`不能代表下标i和下标j呢，非要错位。\
+> 其实是可以的，但是会比较麻烦，Carl后面会讲到。
+
+
+### 确定递推公式
+
+根据 `dp[i][j]` 的定义，`dp[i][j]` 的状态只能由 `dp[i - 1][j - 1]` 推导出来。
+
+即当 A[i - 1]和B[j - 1]相等的时候，`dp[i][j] = dp[i - 1][j - 1] + 1;`
+
+根据递推公式可以看出，遍历 i 和 j 要从1开始！
+
+### dp数组的初始化
+
+根据dp[i][j]的定义，dp[i][0]和dp[0][j]其实都是没有意义的！
+
+但dp[i][0] 和dp[0][j]要初始值，因为为了方便递归公式，所以dp[i][0] 和dp[0][j]初始化为0。
+
+举个例子A[0]如果和B[0]相同的话，`dp[1][1] = dp[0][0] + 1`，只有`dp[0][0]`初始为0，正好符合递推公式逐步累加起来。
+
+### 确认遍历顺序
+
+外层for循环遍历A，内层for循环遍历B。（换过来是一样的，相当于两个数组换个位置，没区别）
+
+同时题目要求长度最长的子数组的长度。所以在遍历的时候顺便把dp[i][j]的最大值记录下来。
+
+```cpp
+for (int i = 1; i <= nums1.size(); i++) {
+    for (int j = 1; j <= nums2.size(); j++) {
+        if (nums1[i - 1] == nums2[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+        }
+        if (dp[i][j] > result) result = dp[i][j];
+    }
+}
+```
+
+### 二维数组版本代码
+
+```cpp
+class Solution {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        auto dp = std::vector<std::vector<int>>(nums1.size() + 1, std::vector<int>(nums2.size() + 1));
+        int result = 0;
+        for(int i = 1; i <= nums1.size(); ++i) {
+            for(int j = 1; j <= nums2.size(); ++j) {
+                if(nums1[i - 1] == nums2[j - 1]) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                }
+                if(dp[i][j] > result) result = dp[i][j];
+            }
+        }
+        return result;
+    }
+};
+```
+
+### 滚动数组
+
+因为很明显：dp[i][j]都是从dp[i-1][j-1]来的，所以可以压缩成滚动数组。
+
+此时遍历B数组的时候，就要从后向前遍历，这样避免重复覆盖。（这个还要再琢磨下）
+
+**不过最本质的办法，就是要模拟推导dp数组。**
+
+```cpp
+class Solution {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        auto dp = std::vector<int>(nums2.size()+1, 0);
+        int result = 0;
+        for(int i = 1; i <= nums1.size(); ++i) {
+            for(int j = nums2.size(); j >= 1; j--) {
+                if(nums1[i-1] == nums2[j-1]) dp[j] = dp[j-1] + 1;
+                else dp[j] = 0; // 这里要多一步，如果不匹配要弄成0
+                if(dp[j] > result) result = dp[j];
+            }
+        }
+        return result;
+    }
+};
+```
+
+### 拓展
+
+前面讲了 dp数组为什么定义：以下标i - 1为结尾的A，和以下标j - 1为结尾的B，最长重复子数组长度为dp[i][j]。
+
+我就定义dp[i][j]为 以下标i为结尾的A，和以下标j 为结尾的B，最长重复子数组长度。不行么？
+
+当然可以，就是实现起来麻烦一些。
+
+如果定义 dp[i][j]为 以下标i为结尾的A，和以下标j 为结尾的B，那么 第一行和第一列毕竟要进行初始化，如果nums1[i] 与 nums2[0] 相同的话，对应的 dp[i][0]就要初始为1， 因为此时最长重复子数组为1。 nums2[j] 与 nums1[0]相同的话，同理。
+
+```cpp
+// 版本三
+class Solution {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        vector<vector<int>> dp (nums1.size() + 1, vector<int>(nums2.size() + 1, 0));
+        int result = 0;
+
+        // 要对第一行，第一列经行初始化
+        for (int i = 0; i < nums1.size(); i++) if (nums1[i] == nums2[0]) dp[i][0] = 1;
+        for (int j = 0; j < nums2.size(); j++) if (nums1[0] == nums2[j]) dp[0][j] = 1;
+
+        for (int i = 0; i < nums1.size(); i++) {
+            for (int j = 0; j < nums2.size(); j++) {
+                if (nums1[i] == nums2[j] && i > 0 && j > 0) { // 防止 i-1 出现负数
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                }
+                if (dp[i][j] > result) result = dp[i][j];
+            }
+        }
+        return result;
+    }
+};
+```
+
+## 最长公共子序列
+
+
+```cpp
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        auto dp = std::vector<std::vector<int>>(text1.size() + 1, std::vector<int>(text2.size() + 1));
+        int result = 0;
+        for(int i = 1; i <= text1.size(); ++i) {
+            for(int j = 1; j <= text2.size(); ++j) {
+                if(text1[i-1] == text2[j-1]) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                } else {
+                    dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);
+                }
+                if (dp[i][j] > result) result = dp[i][j];
+            }
+        }
+        return result; // 其实不用记录result也行，因为这题可以继承，所以右下角一定是结果
+    }
+};
+```
+
+这题和上面那个题目有点类似，其实已经很接近想出来了，就差一点点。
+
+区别就在，因为这题不要求是连续的，所以可以前面的答案。
+
+就只有这个没想出来。
+
+```cpp
+dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);
+```
+
+差一点点。
+
+**这些题都太经典了，很重要！匹配问题。**
+
+
+## 不相交的线
+
+https://leetcode.cn/problems/uncrossed-lines/description/
+
+在两条独立的水平线上按给定的顺序写下 nums1 和 nums2 中的整数。
+
+现在，可以绘制一些连接两个数字 nums1[i] 和 nums2[j] 的直线，这些直线需要同时满足：
+
+ nums1[i] == nums2[j]
+且绘制的直线不与任何其他连线（非水平线）相交。
+请注意，连线即使在端点也不能相交：每个数字只能属于一条连线。
+
+以这种方法绘制线条，并返回可以绘制的最大连线数。
+
+![](https://assets.leetcode.com/uploads/2019/04/26/142.png)
+
+这题貌似也是和上一题是一个道理啊，找最长公共子序列。
+
+```cpp
+class Solution {
+public:
+    int maxUncrossedLines(vector<int>& nums1, vector<int>& nums2) {
+        auto dp = std::vector<std::vector<int>>(nums1.size() + 1, std::vector<int>(nums2.size() + 1, 0));
+        for(int i = 1; i <= nums1.size(); ++i) {
+            for(int j = 1; j <= nums2.size(); ++j) {
+                if(nums1[i-1] == nums2[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+                else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+        return dp[nums1.size()][nums2.size()];
+    }
+};
+```
+
+确实是如此。
+
+## 最大子数组和
+
+https://leetcode.cn/problems/maximum-subarray/description/
+
+给定一个整数数组 nums ，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+示例:
+
+输入: [-2,1,-3,4,-1,2,1,-5,4] \
+输出: 6 \
+解释: 连续子数组 [4,-1,2,1] 的和最大为6。
+
+这题很简单啊。其实做贪心的时候做过这个题了，而且那个思想就是dp思想。
+
+如果加上前一个比自己大，就用这个结果。如果自己大，那就更新为自己。
+
+
+```cpp
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        auto dp = std::vector<int>(nums.size(), 0);
+        dp[0] = nums[0];
+        int result = nums[0];
+        for(int i = 1; i < nums.size(); ++i) {
+            dp[i] = std::max(dp[i-1]+nums[i],nums[i]);
+            if(dp[i] > result) result = dp[i];
+        }
+        return result;
+    }
+};
+```
+
+简单。
+
+## 判断子序列（需要复习）
+
+https://leetcode.cn/problems/is-subsequence/description/
+
+给定字符串 s 和 t ，判断 s 是否为 t 的子序列。
+
+字符串的一个子序列是原始字符串删除一些（也可以不删除）字符而不改变剩余字符相对位置形成的新字符串。（例如，"ace"是"abcde"的一个子序列，而"aec"不是）。
+
+进阶：
+
+如果有大量输入的 S，称作 S1, S2, ... , Sk 其中 k >= 10亿，你需要依次检查它们是否为 T 的子序列。在这种情况下，你会怎样改变代码？
+
+这个题和前面的 最长公共子序列 其实是比较类似的。直接尝试谢谢代码。
+
+```cpp
+class Solution {
+public:
+    bool isSubsequence(string s, string t) {
+        // 判断s是否为t的子序列
+        auto dp = std::vector<std::vector<int>>(s.size() + 1, std::vector<int>(t.size() + 1));
+        for(int i = 1; i <= s.size(); ++i) {
+            for(int j = 1; j <= t.size(); ++j) {
+                if(s[i-1] == t[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+                else dp[i][j] = dp[i][j-1];
+            }
+        }
+        return dp[s.size()][t.size()] == s.size();
+    }
+};
+```
+
+可以通过，但是这个题还是需要复习。
+
+## 不同的子序列（难）
+
+https://leetcode.cn/problems/distinct-subsequences/description/
+
+给你两个字符串 s 和 t ，统计并返回在 s 的 子序列 中 t 出现的个数。
+
+测试用例保证结果在 32 位有符号整数范围内。
+
+这个题是比较难了。
+
+一步一步来。
+
+### dp数组的含义
+
+`dp[i][j]`: 以i-1为结尾的s子序列中出现以j-1为结尾的t的个数为`dp[i][j]`
+
+### 确定递推公式
+
+这种问题就两种情况：
+- `s[i-1]` 和 `t[j-1]` 相等
+- 不相等
+
+**当相等的时候：**
+
+dp[i][j]可以有两部分组成。
+
+一部分是用 s[i-1] 来匹配，这时候个数就是 `dp[i-1][j-1]`，即不需要考虑当前s子串和t子串的最后一位字母，所以只需要 `dp[i-1][j-1]`
+
+另一部分是不需要 s[i-1] 来进行匹配，个数是 `dp[i-1][j]`。
+
+其实这个也很好理解：
+
+ s：bagg 和 t：bag ，s[3] 和 t[2]是相同的，但是字符串s也可以不用s[3]来匹配，即用s[0]s[1]s[2]组成的bag。当然也可以用s[3]来匹配，即：s[0]s[1]s[3]组成的bag。
