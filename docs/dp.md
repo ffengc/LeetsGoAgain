@@ -86,6 +86,13 @@
   - [不同的子序列（难）](#不同的子序列难)
     - [dp数组的含义](#dp数组的含义)
     - [确定递推公式](#确定递推公式-3)
+    - [初始化](#初始化)
+    - [代码](#代码-1)
+  - [两个字符串的删除操作](#两个字符串的删除操作)
+  - [编辑距离](#编辑距离)
+  - [回文子串](#回文子串)
+  - [最长回文子序列](#最长回文子序列)
+  - [动态规划总结篇](#动态规划总结篇)
 
 
 复制这里：
@@ -2781,4 +2788,317 @@ dp[i][j]可以有两部分组成。
 
 其实这个也很好理解：
 
- s：bagg 和 t：bag ，s[3] 和 t[2]是相同的，但是字符串s也可以不用s[3]来匹配，即用s[0]s[1]s[2]组成的bag。当然也可以用s[3]来匹配，即：s[0]s[1]s[3]组成的bag。
+> s：bagg 和 t：bag ，s[3] 和 t[2]是相同的，但是字符串s也可以不用s[3]来匹配，即用s[0]s[1]s[2]组成的bag。当然也可以用s[3]来匹配，即：s[0]s[1]s[3]组成的bag。
+
+
+其实还是有点看不懂文字，看了卡哥视频后，可以这样去理解：
+
+- 其实这个题目就是相当于删除s中部分元素，看看能不能变成t，问有几种删除方法。
+- 第一种情况 `s[i-1] == j[t-1]` 的时候，s匹配上啦！s是可以用的，那我们就可以不删除它：dp[i][j] = dp[i-1][j-1]
+- 或者说，就算s[i-1]下标这个地方匹配上了，我们也不使用它, dp[i][j] = dp[i-1][j] 
+- 这里是最难理解的
+- 然后不相等的情况，就是上面相等情况中的第二种情况。
+
+### 初始化
+
+要初始化什么，是要看你推导出来的递推公式的。
+
+在这个题中，很明显，是从左上方和上方推导出来的，所以一定要初始化第一行和第一列。
+
+按照定义：dp[i][j]表示以i-1结尾s出现以j-1结尾的t的个数。
+
+所以第一行 dp[0][j] 就是在问，在一个空字符串中出现了几个以j-1结尾的t的个数？很明显是0个啊，因为s都是一个空字符串了。
+
+所以第一列 dp[i][0] 在问，在一个以i-1结尾的s中，有几个空字符串？有一个，即全部删掉。
+
+然后 dp[0][0] 是1: 因为空字符串有几种方法删除可以得到一个空字符串？不删，所以是一种。
+
+
+### 代码
+
+```cpp
+class Solution {
+public:
+    int numDistinct(string s, string t) {
+        auto dp = std::vector<std::vector<uint32_t>>(s.size() + 1, std::vector<uint32_t>(t.size() + 1));
+        // 初始化
+        for(int j = 0; j <= t.size(); ++j) dp[0][j] = 0;
+        for(int i = 0; i <= s.size(); ++i) dp[i][0] = 1; // dp[0][0]=1
+        // dp
+        for(int i = 1; i <= s.size(); ++i) {
+            for(int j = 1; j <= t.size(); ++j) {
+                if(s[i-1] == t[j-1]) dp[i][j] = dp[i-1][j-1] + dp[i-1][j];
+                else dp[i][j] = dp[i-1][j];
+            }
+        }
+        return dp[s.size()][t.size()];
+    }
+};
+```
+
+## 两个字符串的删除操作
+
+https://leetcode.cn/problems/delete-operation-for-two-strings/description/
+
+给定两个单词 word1 和 word2 ，返回使得 word1 和  word2 相同所需的最小步数。
+
+每步 可以删除任意一个字符串中的一个字符。
+
+这个题其实和上面的题是类似的，然后区别就是两个串都可以删除了。
+
+其实思路还是同样分两部分。
+
+- 当word1[i - 1] 与 word2[j - 1]相同的时候
+- 当word1[i - 1] 与 word2[j - 1]不相同的时候
+
+第一种情况，因为两个字符相同，这个数字就不用删了！所以要删多少步跟我这个下标没关系，所以继承前面的下标！
+
+dp[i][j] <- dp[i-1][j-1]
+
+第二种情况就要分开了，不相同怎么样才能达到相同？
+- 删除word1一个字符然后+1
+- 删除word2一个字符然后+1
+- 同时删除两个字符然后+2
+
+如果是上面那题，就全部加起来就行了，但这里是求步数最小，所以取最小值就行了，取完之后
+
+初始化怎么办？要看定义！
+
+首先按照递推公式，肯定要初始化第一行和第一列。
+
+dp[i][j]表示，s[i-1]为结尾，t[j-1]为结尾，删除到相同的最小步数。
+
+- 第一行：dp[0][j]表示s空，t[j-1]要删到相同需要多少步？多长就多少步！
+- 第一列：同理。
+
+然后具体验证，还需要推导一下dp数组，才能证实我是对的，现在尝试推导！
+
+然后我用 sea, eat 推导了一下，思路是没问题的。
+
+也就是说，最终一定要自己推一下，因为一开始想的初始化和递推可能都不太准，必须自己推一次，修改一下微调下就能做出来。
+
+写代码。
+
+```cpp
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        auto dp = std::vector<std::vector<int>>(word1.size()+1, std::vector<int>(word2.size()+1));
+        // 初始化
+        for(int i = 0; i <= word1.size(); ++i) dp[i][0] = i;
+        for(int j = 0; j <= word2.size(); ++j) dp[0][j] = j;
+        // dp
+        for(int i = 1; i <= word1.size(); ++i) {
+            for(int j = 1; j <= word2.size(); ++j) {
+                if(word1[i-1] == word2[j-1]) dp[i][j] = dp[i-1][j-1];
+                else dp[i][j] = std::min(dp[i-1][j]+1, std::min(dp[i-1][j-1]+2, dp[i][j-1]+1));
+            }
+        }
+        return dp[word1.size()][word2.size()];
+    }
+};
+```
+
+**没问题，一定要手动推导！**
+
+## 编辑距离
+
+https://leetcode.cn/problems/edit-distance/description/
+
+给你两个单词 word1 和 word2， 请返回将 word1 转换成 word2 所使用的最少操作数  。
+
+你可以对一个单词进行如下三种操作：
+
+插入一个字符
+删除一个字符
+替换一个字符
+
+思路和前面类似！
+
+要记住这个做题的方式：
+
+```
+if (word1[i - 1] == word2[j - 1])
+    不操作
+if (word1[i - 1] != word2[j - 1])
+    增
+    删
+    换
+```
+
+按照这个来，就没问题了！
+
+> [!IMPORTANT]
+> word2添加一个元素，相当于word1删除一个元素，例如 word1 = "ad" ，word2 = "a"，word1删除元素'd' 和 word2添加一个元素'd'，变成word1="a", word2="ad"， 最终的操作数是一样！ \
+> **所以虽然题目问，word1可以怎么操作变word2，字面意思上word2不能动，其实可以把word1添加字符变成word2减少字符！**
+
+**所以递推公式：**
+
+`if (word1[i - 1] == word2[j - 1])` 那么说明不用任何编辑，dp[i][j] 就应该是 dp[i - 1][j - 1]，即dp[i][j] = dp[i - 1][j - 1];
+
+相等的时候不用改。
+
+重点是不相等的时候：
+
+**操作一：** word1删除一个元素，那么就是以下标i - 2为结尾的word1 与 j-1为结尾的word2的最近编辑距离再加上一个操作。
+即 dp[i][j] = dp[i - 1][j] + 1;
+
+**操作二：** word2删除一个元素（等价于word1添加一个元素），那么就是以下标i - 1为结尾的word1 与 j-2为结尾的word2的最近编辑距离再加上一个操作。
+即 dp[i][j] = dp[i][j - 1] + 1;
+
+**操作三：**替换元素，word1替换word1[i - 1]，使其与word2[j - 1]相同，此时不用增删加元素。
+
+可以回顾一下，if (word1[i - 1] == word2[j - 1])的时候我们的操作 是 dp[i][j] = dp[i - 1][j - 1] 对吧。
+
+那么只需要一次替换的操作，就可以让 word1[i - 1] 和 word2[j - 1] 相同。
+
+所以` dp[i][j] = dp[i - 1][j - 1] + 1;`
+
+综上，当 `if (word1[i - 1] != word2[j - 1])` 时取最小的，即：`dp[i][j] = min({dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]}) + 1;`
+
+
+初始化和之前一样，一个字符变成空字符，最快的方法就是全部删掉。
+
+**代码：**
+
+```cpp
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        auto dp = std::vector<std::vector<int>>(word1.size()+1, std::vector<int>(word2.size() + 1));
+        for(int i = 0; i <= word1.size(); ++i) dp[i][0] = i;
+        for(int j = 0; j <= word2.size(); ++j) dp[0][j] = j;
+        for(int i = 1; i <= word1.size(); ++i) {
+            for(int j = 1; j <= word2.size(); ++j) {
+                if(word1[i-1] == word2[j-1]) dp[i][j] = dp[i-1][j-1];
+                else dp[i][j] = std::min(dp[i-1][j], std::min(dp[i-1][j-1], dp[i][j-1])) + 1;
+            }
+        }
+        return dp[word1.size()][word2.size()];
+    }
+};
+```
+
+按照思路可以顺利通过。
+
+**‼️这个编辑距离系列的问题不简单！要整合复习！！！**
+
+## 回文子串
+
+https://leetcode.cn/problems/palindromic-substrings/description/
+
+dp[j][i]表示区间i,j能否组成回文
+
+如果 s[j] != s[i], 一定不可以，直接给false
+
+如果 s[j] == s[i]，就要分情况
+- 如果 i==j，那不就是一个字符，true
+- 如果 i-j==1，两个相同字符，回文
+- 如果 i-j>1, 就要判断 s[j+1][i-1]是否是回文，
+
+所以这样我们就得到了递推公式。
+
+然后要看看，我们是从右上角往左下角递推。
+
+所以遍历顺序i是正向，j是逆向。
+- 这个怎么判断快一点呢：正常方向是i-1之类的，如果出现+1，那就是反过来。
+
+**初始化**，不也定是否需要，推导来看看要不要。
+
+然后我推导了一下，是不需要的。
+
+代码：
+
+```cpp
+class Solution {
+public:
+    int countSubstrings(string s) {
+        auto dp = std::vector<std::vector<bool>>(s.size(), std::vector<bool>(s.size(), false));
+        int result = 0;
+        for(int i = 0; i < s.size(); ++i) {
+            for(int j = i; j >= 0; j--) {
+                if(s[i]!=s[j]) dp[i][j] = false;
+                else {
+                    if(i-j==0) {dp[i][j] = true; result++;}
+                    else if(i-j==1) {dp[i][j] = true; result++;}
+                    else {
+                        dp[i][j] = dp[i-1][j+1];
+                        if(dp[i][j]) result++;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+};
+```
+
+顺利通过。
+
+## 最长回文子序列
+
+https://leetcode.cn/problems/longest-palindromic-subsequence/description/
+
+给你一个字符串 s ，找出其中最长的回文子序列，并返回该序列的长度。
+
+子序列定义为：不改变剩余字符顺序的情况下，删除某些字符或者不删除任何字符形成的一个序列。
+
+**这题不一样，这题是不要求连续的。**
+
+输入：s = "bbbab" \
+输出：4 \
+解释：一个可能的最长回文子序列为 "bbbb" 。
+
+这题我先自己思考。
+
+b b b a b
+
+dp[i]表示以i结尾最长回文是多少。
+
+dp[0]不用说肯定是1
+
+然后如果 dp[j] == dp[i], dp[i] = dp[j] + 1 然后dp[i]要记录并取最大
+
+如果 dp[j] != dp[i] dp[i]<-1
+
+试试代码。
+
+然后这个思路是有问题的，不能判断回文。
+
+比如 aaabaaa 就会不对了。所以还是需要一个二维数组。
+
+**换一个思路：**
+
+dp[i][j]：字符串s在[i, j]范围内最长的回文子序列的长度为dp[i][j]。
+
+- s[i] == t[j]: 此时因为题目是不要求连续的，所以此时 dp[i][j] = dp[i-1][j+1] + 2，因为多了两个相等的
+- s[i] != t[j]: 此时前后两个用不了，可以删除i也可以删除j
+    。所以就是 dp[i][j] = std::max(dp[i-1][j], dp[i][j+1])
+
+注意遍历的方向。
+
+```cpp
+class Solution {
+public:
+    int longestPalindromeSubseq(string s) {
+        auto dp = std::vector<std::vector<int>>(s.size(), std::vector<int>(s.size()));
+        // dp[0][0] = 0;
+        for(int i = 0; i < s.size(); ++i) {
+            for(int j = i; j >= 0; j--) {
+                if(s[i] == s[j]) {
+                    if(i == j) dp[i][j] = 1;
+                    else dp[i][j] = dp[i-1][j+1] + 2;
+                }
+                else dp[i][j] = std::max(dp[i-1][j], dp[i][j+1]);
+            }
+        }
+        return dp[s.size()-1][0];
+    }
+};
+```
+
+这个代码是我自己推导的，和carl的还不太一样。
+
+所以说明了，dp问题一定要自己推导！
+
+## 动态规划总结篇
