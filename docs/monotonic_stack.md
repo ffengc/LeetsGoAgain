@@ -1,8 +1,8 @@
 
 
-# 单调栈
+# 单调栈（重要）
 
-- [单调栈](#单调栈)
+- [单调栈（重要）](#单调栈重要)
   - [单调栈简介](#单调栈简介)
   - [每日温度](#每日温度)
     - [Carl的模拟过程](#carl的模拟过程)
@@ -10,6 +10,10 @@
   - [下一个更大元素I](#下一个更大元素i)
   - [下一个更大元素II](#下一个更大元素ii)
   - [接雨水](#接雨水)
+    - [暴力](#暴力)
+    - [优化暴力解法](#优化暴力解法)
+    - [单调栈方法](#单调栈方法)
+  - [柱状图中最大的矩形](#柱状图中最大的矩形)
 
 ## 单调栈简介
 
@@ -202,3 +206,209 @@ public:
 
 https://leetcode.cn/problems/trapping-rain-water/description/
 
+给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/22/rainwatertrap.png)
+
+### 暴力
+
+暴力解法很容易想到，首先一层循环，遍历这个数组。
+然后还有里面需要一层循环，去找当前下标两边的高度。
+
+此时是 n^2 的复杂度。
+
+我先用暴力的解法先试一下。
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int sum = 0; // 最后能接雨水的总数
+        for(int i = 0; i < height.size(); ++i) {
+            if(i == 0 || i == height.size() - 1) continue; // 第一个和最后一个柱子不接雨水
+            int leftHeight = height[i]; // 左边最高高度
+            int rightHeight = height[i]; // 右边最高高度
+            // 找左边最高
+            for(int l = i - 1; l >= 0; l--)
+                if(height[l] > leftHeight) leftHeight = height[l];
+            // 找右边最高
+            for(int r = i + 1; r < height.size(); ++r)
+                if(height[r] > rightHeight) rightHeight = height[r];
+            //
+            int h = std::min(rightHeight, leftHeight) - height[i];
+            if(h > 0) sum += h;
+        }
+        return sum;
+    }
+};
+```
+
+
+### 优化暴力解法
+
+上面提到，这个暴力解法，需要在里面用一层循环，求两边比他高的柱子的高度。
+
+这里是可以预处理的，可以用一个数组提前存好。
+
+这样就能做到 On
+
+为了得到两边的最高高度，使用了双指针来遍历，每到一个柱子都向两边遍历一遍，这其实是有重复计算的。我们把每一个位置的左边最高高度记录在一个数组上（maxLeft），右边最高高度记录在一个数组上（maxRight），这样就避免了重复计算。
+
+当前位置，左边的最高高度是前一个位置的左边最高高度和本高度的最大值。
+
+即从左向右遍历：maxLeft[i] = max(height[i], maxLeft[i - 1]);
+
+从右向左遍历：maxRight[i] = max(height[i], maxRight[i + 1]);
+
+求这个高度，有点像动态规划的思想。
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        if(height.size() == 1) return 0;
+        std::vector<int> maxLeft(height.size());
+        std::vector<int> maxRight(height.size());
+        maxLeft[0] = height[0];
+        maxRight[height.size() - 1] = height[height.size() - 1];
+        for(int i = 1; i < height.size(); ++i)
+            maxLeft[i] = std::max(height[i], maxLeft[i-1]);
+        for(int i = height.size() - 2; i >= 0; i--)
+            maxRight[i] = std::max(height[i], maxRight[i+1]);
+        // 求和 
+        int sum = 0;
+        for(int i = 0; i < height.size(); ++i) {
+            if(i == 0 || i == height.size() - 1) continue;
+            int h = std::min(maxLeft[i], maxRight[i]) - height[i];
+            if(h > 0) sum += h;
+        }
+        return sum;
+    }
+};
+```
+
+此时是不会超时的，可以通过。
+
+### 单调栈方法
+
+为什么可以使用单调栈？
+
+因为对于每一个i，我们都要找到左边第一个比他高的柱子和右边第一个比他高的柱子。
+
+为什么不是找最高，等下说明。
+
+然后前面也提到过，要找右边/左边比自己大的，就是递增栈。
+
+https://www.bilibili.com/video/BV1uD4y1u75P?spm_id_from=333.788.videopod.sections
+
+这个是b站的思路，很重要。
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        // 单调栈写法
+        std::stack<int> st;
+        st.push(0);
+        int sum = 0; // 结果
+        for(int i = 1; i < height.size(); ++i) {
+            if(height[i] > height[st.top()]) {
+                while(!st.empty() && height[i] > height[st.top()]) {
+                    int right = height[i];
+                    int mid = height[st.top()];
+                    st.pop();
+                    if(!st.empty()) {
+                        int left = height[st.top()];
+                        int h = std::min(left, right) - mid;
+                        int w = i - st.top() - 1;
+                        if(h > 0) sum += (h * w);
+                    }
+                }
+                st.push(i);
+            } else {
+                st.push(i);
+            }
+        }
+        return sum;
+    }
+};
+```
+
+按照Carl的思路确实可以写出来了，精髓是，如果遇到 `height[i] > height[st.top()]` 的时候：
+- 此时 height[i] 就是 right
+- 此时 height[st.top()] 就是 mid
+- 栈里除了top的下一个元素，就是 left
+这个就是本题的精髓。
+
+
+重要题目，需要复习！
+
+然后等于的情况如何处理，视频里都有讲，其实是一个意思，不影响的。
+
+## 柱状图中最大的矩形
+
+https://leetcode.cn/problems/largest-rectangle-in-histogram/description/
+
+给定n个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为1。
+
+求在该柱状图中，能够勾勒出来的矩形的最大面积。
+
+![](https://assets.leetcode.com/uploads/2021/01/04/histogram.jpg)
+
+这题其实和接雨水有异曲同工之妙啊。
+
+接雨水是，当前下标为i的柱子，左右分别比i高的。
+
+这题是，当先下标为i的柱子，左右分别比i低的。
+
+- 比如i=0的时候，2就不能向右边扩展了
+- i=1的时候，可以扩展到6个单位的宽度
+- i=2的时候，可以扩展到2个单位的宽度
+
+同理。
+
+写写代码即可。很明显，这个题是递减栈了。
+
+> [!IMPORTANT]
+> **然后这题的精髓：需要前后分别添加一个0，这样就可以很好的处理边界问题** \
+> 我一开始自己尝试写代码的时候，就感觉边界条件比较难以处理。
+
+```cpp
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        heights.insert(heights.begin(), 0); // O(n)
+        heights.push_back(0); // O(1)
+        std::stack<int> st;
+        int maxArea = 0;
+        st.push(0);
+        for(int i = 1; i < heights.size(); ++i) {
+            if(heights[i] < heights[st.top()]) {
+                // 严格小于才去统计结果，如果==的话，还是可以扩展宽度的
+                while(!st.empty() && heights[i] < heights[st.top()]) {
+                    int rightIdx = i;
+                    int midHeight = heights[st.top()];
+                    int midIdx = st.top();
+                    int leftIdx = -1;
+                    if(!st.empty()) {
+                        st.pop();
+                        leftIdx = st.top();
+                    }
+                    int area;
+                    if(midHeight > 0)
+                        area = (rightIdx - leftIdx - 1) * midHeight;
+                    maxArea = std::max(area, maxArea);
+                }
+                st.push(i);
+            } else {
+                st.push(i);
+            }
+        }
+        return maxArea;
+    }
+};
+```
+
+通过了。
+
+这题的加0很精髓。
