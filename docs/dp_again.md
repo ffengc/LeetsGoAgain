@@ -17,6 +17,14 @@
     - [1049. 最后一块石头的重量 II](#1049-最后一块石头的重量-ii)
     - [494. 目标和](#494-目标和)
     - [474. 一和零](#474-一和零)
+    - [52. 携带研究材料（第七期模拟笔试）](#52-携带研究材料第七期模拟笔试)
+    - [518. 零钱兑换 II](#518-零钱兑换-ii)
+    - [377. 组合总和 Ⅳ](#377-组合总和-ⅳ)
+    - [57. 爬楼梯（第八期模拟笔试）](#57-爬楼梯第八期模拟笔试)
+    - [322. 零钱兑换](#322-零钱兑换)
+    - [279. 完全平方数](#279-完全平方数)
+    - [139. 单词拆分](#139-单词拆分)
+    - [56. 携带矿石资源（第八期模拟笔试）](#56-携带矿石资源第八期模拟笔试)
 
 ## 如何复习？
 
@@ -422,3 +430,294 @@ public:
 > - 这里看似有三层循环，其实本质和前面题目的两层循环是一样的
 >   - 这里面第一层，遍历所有元素，不就是之前01背包的遍历所有物品吗
 >   - 这里面第二层和第三层，本质就是之前01背包的第二层而已
+
+### 52. 携带研究材料（第七期模拟笔试）
+
+https://kamacoder.com/problempage.php?pid=1052
+
+
+```cpp
+int unboundedKnapsackProblem(int bagweight, const std::vector<int>& weights, const std::vector<int>& values) {
+    int n = weights.size();
+    // 二维数组
+    auto dp = std::vector<std::vector<int>>(n, std::vector<int>(bagweight + 1));
+    // 初始化第一行
+    // tips: 这个初始化挺巧秒的，可以学一下
+    // 如果这个不好理解，可以用无脑一点的方法
+    for (int j = weights[0]; j <= bagweight; j++)
+        dp[0][j] = dp[0][j - weights[0]] + values[0];
+    // 第一列：背包容量0的时候最大价值，因为这里weights都是正的，所以都是0
+    // dp
+    for(int i = 1; i < n; ++i) {
+        // 遍历所有物品
+        for(int j = 0; j <= bagweight; j++) {
+            if(j < weights[i]) dp[i][j] = dp[i-1][j];
+            else dp[i][j] = std::max(dp[i-1][j], dp[i][j-weights[i]] + values[i]);
+        }
+    }
+    return dp[n-1][bagweight];
+}
+```
+
+一位数组:
+
+```cpp
+int unboundedKnapsackProblem(int bagweight, const std::vector<int>& weights, const std::vector<int>& values) {
+    int n = weights.size();
+    auto dp = std::vector<int>(bagweight+1);
+    dp[0] = 0;
+    for(int i = 0; i < n; ++i)
+        for(int j = 0; j <= bagweight; ++j) // 要注意，这里是从0开始
+            if(j >= weights[i]) dp[j] = std::max(dp[j], dp[j-weights[i]] + values[i]);
+    return dp[bagweight];
+}
+```
+
+> [!IMPORTANT]
+> **注意，j的循环是从0开始的，不是从1开始的，要看清楚**
+
+
+### 518. 零钱兑换 II
+
+https://leetcode.cn/problems/coin-change-ii/description/
+
+给你一个整数数组 coins 表示不同面额的硬币，另给一个整数 amount 表示总金额。
+
+请你计算并返回可以凑成总金额的硬币组合数。如果任何硬币组合都无法凑出总金额，返回 0 。
+
+假设每一种面额的硬币有无限个。 
+
+题目数据保证结果符合 32 位带符号整数。
+
+> [!TIP]
+> 无脑完全背包啊 \
+> 然后这里是组合数，所以是经典的背包 \
+> 然后这里是求装满背包的方法有几种
+
+```cpp
+class Solution {
+private:
+    int solution(int target, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<uint32_t>(target + 1);
+        dp[0] = 1; // 填满容量为0的背包有一种方法
+        for(int i = 0; i < n; ++i)
+            for(int j = 0; j <= target; ++j)
+                if(j >= nums[i]) dp[j] += dp[j-nums[i]];
+        return dp[target];
+    }
+public:
+    int change(int amount, vector<int>& coins) {
+        return solution(amount, coins);
+    }
+};
+```
+
+简简单单，很熟练。
+
+### 377. 组合总和 Ⅳ
+
+https://leetcode.cn/problems/combination-sum-iv/description/
+
+给你一个由 不同 整数组成的数组 nums ，和一个目标整数 target 。请你从 nums 中找出并返回总和为 target 的元素组合的个数。
+
+题目数据保证答案符合 32 位整数范围。
+
+> [!TIP]
+> 无脑完全背包啊 \
+> 然后这里题目说了，不同顺序是不同的，所以是排列数，先遍历背包 \
+> 然后这里是求装满背包的方法有几种
+
+```cpp
+class Solution {
+private:
+    int solution(int target, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<uint32_t>(target + 1);
+        dp[0] = 1; // 填满容量为0的背包有一种方法
+        for(int j = 0; j <= target; ++j)
+            for(int i = 0; i < n; ++i)
+                if(j >= nums[i]) dp[j] += dp[j-nums[i]];
+        return dp[target];
+    }
+public:
+    int combinationSum4(vector<int>& nums, int target) {
+        return solution(target, nums);
+    }
+};
+```
+
+### 57. 爬楼梯（第八期模拟笔试）
+
+https://kamacoder.com/problempage.php?pid=1067
+
+假设你正在爬楼梯。需要 n 阶你才能到达楼顶。 
+每次你可以爬至多m (1 <= m < n)个台阶。你有多少种不同的方法可以爬到楼顶呢？ 
+注意：给定 n 是一个正整数。
+
+> [!TIP]
+> 完全背包 \
+> 明显是排列数，先遍历背包 \
+> 然后这里是求装满背包的方法有几种
+
+```cpp
+int solution(int target, int numbers) {
+    auto dp = std::vector<uint32_t>(target + 1);
+    dp[0] = 1; // 填满容量为0的背包有一种方法
+    for(int j = 0; j <= target; ++j)
+        for(int i = 1; i <= numbers; ++i)
+            if(j >= i) dp[j] += dp[j-i];
+    return dp[target];
+}
+int main() {
+    int target, numbers;
+    std::cin >> target >> numbers;
+    std::cout << solution(target, numbers) << std::endl;
+    return 0;
+}
+```
+
+简简单单，很熟练！
+
+### 322. 零钱兑换
+
+https://leetcode.cn/problems/coin-change/description/
+
+给你一个整数数组 coins ，表示不同面额的硬币；以及一个整数 amount ，表示总金额。
+
+计算并返回可以凑成总金额所需的 最少的硬币个数 。如果没有任何一种硬币组合能组成总金额，返回 -1 。
+
+你可以认为每种硬币的数量是无限的。
+
+> [!TIP]
+> 完全背包 \
+> 一般求个数的，就和排列组合没关系了，谁先谁后应该都是可以的 \
+> 然后这里是求最少硬币数量，做一些小改变就行
+
+```cpp
+class Solution {
+private:
+    int solution(int target, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<uint32_t>(target + 1, INT_MAX);
+        dp[0] = 0; // 装满容量为0的背包，最少硬币个数为0
+        for(int i = 0; i < n; ++i)
+            for(int j = 0; j <= target; ++j)
+                if(j >= nums[i])
+                    dp[j] = std::min(dp[j], dp[j-nums[i]] + 1);
+        return dp[target] == INT_MAX ? -1 : dp[target];
+    }
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        return solution(amount, coins);
+    }
+};
+```
+
+简简单单，直接通过。
+
+### 279. 完全平方数
+
+https://leetcode.cn/problems/perfect-squares/description/
+
+```cpp
+class Solution {
+private:
+    int solution(int target, const std::vector<int>& nums) {
+        int n = nums.size();
+        auto dp = std::vector<uint32_t>(target + 1, INT_MAX);
+        dp[0] = 0;
+        for(int i = 0; i < n; ++i)
+            for(int j = 0; j <= target; ++j)
+                if(j >= nums[i]) dp[j] = std::min(dp[j], dp[j-nums[i]] + 1);
+        return dp[target];
+    }
+public:
+    int numSquares(int n) {
+        std::vector<int> objs;
+        for(int i = 1; i <= std::sqrt(n); ++i)
+            objs.push_back(i*i);
+        return solution(n, objs);
+    }
+};
+```
+
+直接通过。其实就是上一题稍微改一下而已。
+
+### 139. 单词拆分
+
+https://leetcode.cn/problems/word-break/description/
+
+```cpp
+class Solution {
+private:
+    bool unboundedKnapsackProblem(const std::string& target, const std::vector<string>& wordDict) {
+        std::unordered_set<std::string> sset(wordDict.begin(), wordDict.end());
+        int n = wordDict.size();
+        auto dp = std::vector<bool>(target.size() + 1, false);
+        dp[0] = true; // 这里要注意，不然后面全是 false 了
+        for(int j = 1; j <= target.size(); j++) { // 遍历背包
+            for(int i = 0; i < j; i++) {
+                std::string str = target.substr(i, j - i);
+                if(sset.find(str) != sset.end() && dp[i]) dp[j] = true;
+            }
+        }
+        return dp[target.size()];
+    }
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        return unboundedKnapsackProblem(s, wordDict);
+    }
+};
+```
+
+这题还是有点没有理解的，需要再复习才行。
+
+### 56. 携带矿石资源（第八期模拟笔试）
+
+多重背包。把多重背包展开，变成01背包就行了。
+
+```cpp
+
+
+#include <iostream>
+#include <vector>
+
+int solution(int bagweight, const std::vector<int>& w, const std::vector<int>& v, const std::vector<int>& q) {
+    std::vector<int> weight, value;
+    for(int i = 0; i < q.size(); ++i) {
+        for(int j = 0; j < q[i]; ++j) {
+            weight.push_back(w[i]);
+            value.push_back(v[i]);
+        }
+    }
+    // 01 knapsack problem
+    int n = weight.size();
+    auto dp = std::vector<int>(bagweight + 1);
+    for(int i = 0; i < n; ++i)
+        for(int j = bagweight; j >= weight[i]; j--)
+            dp[j] = std::max(dp[j], dp[j-weight[i]] + value[i]);
+    return dp[bagweight];
+}
+
+int main() {
+    int bagweight, n;
+    std::cin >> bagweight >> n;
+    std::vector<int> weight(n);
+    std::vector<int> value(n);
+    std::vector<int> quantity(n);
+    for(int i = 0; i < n; ++i)
+        std::cin >> weight[i];
+    for(int i = 0; i < n; ++i)
+        std::cin >> value[i];
+    for(int i = 0; i < n; ++i)
+        std::cin >> quantity[i];
+    std::cout << solution(bagweight, weight, value, quantity) << std::endl;
+    return 0;
+}
+```
+
+简简单单。背包问题复习到这里就圆满结束了。
+
+> [!CAUTION]
+> 单词拆分那个题目，还需要复习才行。
