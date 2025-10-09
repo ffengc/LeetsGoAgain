@@ -25,6 +25,10 @@
     - [279. 完全平方数](#279-完全平方数)
     - [139. 单词拆分](#139-单词拆分)
     - [56. 携带矿石资源（第八期模拟笔试）](#56-携带矿石资源第八期模拟笔试)
+  - [打家劫舍系列](#打家劫舍系列)
+    - [198. 打家劫舍](#198-打家劫舍)
+    - [213. 打家劫舍 II](#213-打家劫舍-ii)
+    - [337. 打家劫舍 III](#337-打家劫舍-iii)
 
 ## 如何复习？
 
@@ -721,3 +725,103 @@ int main() {
 
 > [!CAUTION]
 > 单词拆分那个题目，还需要复习才行。
+
+## 打家劫舍系列
+
+### 198. 打家劫舍
+
+https://leetcode.cn/problems/house-robber/description/
+
+你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你 不触动警报装置的情况下 ，一夜之内能够偷窃到的最高金额。
+
+```cpp
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        // 这题其实很简单
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size());
+        dp[0] = nums[0];
+        dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)
+            dp[i] = std::max(dp[i-1], nums[i] + dp[i-2]);
+        return dp[nums.size() - 1];
+    }
+};
+```
+
+这题很简单。
+
+### 213. 打家劫舍 II
+
+https://leetcode.cn/problems/house-robber-ii/description/
+
+对比上面，就是所有房子围成一圈了。
+
+```cpp
+class Solution {
+private:
+    int _rob(vector<int> nums) {
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size());
+        dp[0] = nums[0];
+        dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)
+            dp[i] = std::max(dp[i-1], nums[i] + dp[i-2]);
+        return dp[nums.size() - 1];
+    }
+public:
+    int rob(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        int res1 = _rob(std::vector<int>(nums.begin() + 1, nums.end()));
+        int res2 = _rob(std::vector<int>(nums.begin(), nums.end() - 1));
+        return std::max(res1, res2);
+    }
+};
+```
+
+> [!NOTE]
+> 这个其实和570考试那个题有点像，考虑第一个不考虑最后一个。考虑最后一个不考虑第一个。这个思想，很重要。要记住！
+
+### 337. 打家劫舍 III
+
+https://leetcode.cn/problems/house-robber-iii/description/
+
+除了 root 之外，每栋房子有且只有一个“父“房子与之相连。一番侦察之后，聪明的小偷意识到“这个地方的所有房屋的排列类似于一棵二叉树”。 如果 两个直接相连的房子在同一天晚上被打劫 ，房屋将自动报警。
+
+给定二叉树的 root 。返回 在不触动警报的情况下 ，小偷能够盗取的最高金额 。
+
+
+![](https://assets.leetcode.com/uploads/2021/03/10/rob1-tree.jpg)
+
+```cpp
+class Solution {
+/**
+    核心思路：用一个 pair 来记录，pair.first 表示不偷当前节点的结果。 
+    pair.second 表示偷当前节点的结果。
+*/
+private:
+    std::pair<int,int> dfs(TreeNode* root) {
+        if(root == nullptr) return {0, 0};
+        auto left = dfs(root->left);
+        auto right = dfs(root->right); // 无脑后序遍历再说
+        int val1 = root->val + left.first + right.first; // 偷当前节点
+        int val2 = std::max(left.first, left.second) + std::max(right.first, right.second);
+        return {val2, val1};
+    }
+public:
+    int rob(TreeNode* root) {
+        return std::max(dfs(root).first, dfs(root).second);
+    }
+};
+```
+
+这题还是蛮有意思的。
+
+> [!IMPORTANT]
+> 核心思路：用一个 pair 来记录，`pair.first` 表示不偷当前节点的结果。`pair.second` 表示偷当前节点的结果。
+
