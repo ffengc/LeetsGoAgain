@@ -25,6 +25,17 @@
     - [279. 完全平方数](#279-完全平方数)
     - [139. 单词拆分](#139-单词拆分)
     - [56. 携带矿石资源（第八期模拟笔试）](#56-携带矿石资源第八期模拟笔试)
+  - [打家劫舍系列](#打家劫舍系列)
+    - [198. 打家劫舍](#198-打家劫舍)
+    - [213. 打家劫舍 II](#213-打家劫舍-ii)
+    - [337. 打家劫舍 III](#337-打家劫舍-iii)
+  - [股票系列](#股票系列)
+    - [121. 买卖股票的最佳时机](#121-买卖股票的最佳时机)
+    - [122. 买卖股票的最佳时机 II](#122-买卖股票的最佳时机-ii)
+    - [123. 买卖股票的最佳时机 III](#123-买卖股票的最佳时机-iii)
+    - [188. 买卖股票的最佳时机 IV](#188-买卖股票的最佳时机-iv)
+    - [309. 买卖股票的最佳时机含冷冻期](#309-买卖股票的最佳时机含冷冻期)
+    - [714. 买卖股票的最佳时机含手续费](#714-买卖股票的最佳时机含手续费)
 
 ## 如何复习？
 
@@ -721,3 +732,285 @@ int main() {
 
 > [!CAUTION]
 > 单词拆分那个题目，还需要复习才行。
+
+## 打家劫舍系列
+
+### 198. 打家劫舍
+
+https://leetcode.cn/problems/house-robber/description/
+
+你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你 不触动警报装置的情况下 ，一夜之内能够偷窃到的最高金额。
+
+```cpp
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        // 这题其实很简单
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size());
+        dp[0] = nums[0];
+        dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)
+            dp[i] = std::max(dp[i-1], nums[i] + dp[i-2]);
+        return dp[nums.size() - 1];
+    }
+};
+```
+
+这题很简单。
+
+### 213. 打家劫舍 II
+
+https://leetcode.cn/problems/house-robber-ii/description/
+
+对比上面，就是所有房子围成一圈了。
+
+```cpp
+class Solution {
+private:
+    int _rob(vector<int> nums) {
+        if(nums.size() == 1) return nums[0];
+        if(nums.size() == 2) return std::max(nums[0], nums[1]);
+        auto dp = std::vector<int>(nums.size());
+        dp[0] = nums[0];
+        dp[1] = std::max(nums[0], nums[1]);
+        for(int i = 2; i < nums.size(); ++i)
+            dp[i] = std::max(dp[i-1], nums[i] + dp[i-2]);
+        return dp[nums.size() - 1];
+    }
+public:
+    int rob(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        int res1 = _rob(std::vector<int>(nums.begin() + 1, nums.end()));
+        int res2 = _rob(std::vector<int>(nums.begin(), nums.end() - 1));
+        return std::max(res1, res2);
+    }
+};
+```
+
+> [!NOTE]
+> 这个其实和570考试那个题有点像，考虑第一个不考虑最后一个。考虑最后一个不考虑第一个。这个思想，很重要。要记住！
+
+### 337. 打家劫舍 III
+
+https://leetcode.cn/problems/house-robber-iii/description/
+
+除了 root 之外，每栋房子有且只有一个“父“房子与之相连。一番侦察之后，聪明的小偷意识到“这个地方的所有房屋的排列类似于一棵二叉树”。 如果 两个直接相连的房子在同一天晚上被打劫 ，房屋将自动报警。
+
+给定二叉树的 root 。返回 在不触动警报的情况下 ，小偷能够盗取的最高金额 。
+
+
+![](https://assets.leetcode.com/uploads/2021/03/10/rob1-tree.jpg)
+
+```cpp
+class Solution {
+/**
+    核心思路：用一个 pair 来记录，pair.first 表示不偷当前节点的结果。 
+    pair.second 表示偷当前节点的结果。
+*/
+private:
+    std::pair<int,int> dfs(TreeNode* root) {
+        if(root == nullptr) return {0, 0};
+        auto left = dfs(root->left);
+        auto right = dfs(root->right); // 无脑后序遍历再说
+        int val1 = root->val + left.first + right.first; // 偷当前节点
+        int val2 = std::max(left.first, left.second) + std::max(right.first, right.second);
+        return {val2, val1};
+    }
+public:
+    int rob(TreeNode* root) {
+        return std::max(dfs(root).first, dfs(root).second);
+    }
+};
+```
+
+这题还是蛮有意思的。
+
+> [!IMPORTANT]
+> 核心思路：用一个 pair 来记录，`pair.first` 表示不偷当前节点的结果。`pair.second` 表示偷当前节点的结果。
+
+
+## 股票系列
+
+> [!IMPORTANT]
+> 股票问题的核心在于：控制好状态，每一种状态用一行dp来表示即可！
+
+### 121. 买卖股票的最佳时机
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 1) return 0;
+        // 第一行表示不持有股票，第二行表示持有股票
+        auto dp = std::vector<std::vector<int>>(2, std::vector<int>(prices.size()));
+        dp[0][0] = 0;
+        dp[1][0] = -prices[0];
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = std::max(dp[0][j-1], dp[1][j-1] + prices[j]);
+            dp[1][j] = std::max(dp[1][j-1], -prices[j]);
+        }
+        return dp[0][prices.size() - 1];
+    }
+};
+```
+
+当然这题写成了，2行n列的形式。在Carl的结果中，都是n行两列的形式的。后面还是继续用我这种方式是不错的。
+
+### 122. 买卖股票的最佳时机 II
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 1) return 0;
+        auto dp = std::vector<std::vector<int>>(2, std::vector<int>(prices.size()));
+        dp[0][0] = 0; // 第一行不持有
+        dp[1][0] = -prices[0]; // 第二行持有
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = std::max(dp[1][j-1] + prices[j], dp[0][j-1]);
+            dp[1][j] = std::max(dp[1][j-1], dp[0][j-1] - prices[j]);
+        }
+        return dp[0][prices.size()-1];
+    }
+};
+```
+
+没问题，也是控制好状态即可。
+
+### 123. 买卖股票的最佳时机 III
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/description/
+
+你最多可以完成两笔交易。
+
+所以控制五个状态:
+1. 还没买过，不持有股票
+2. 买入第一次，持有股票
+3. 第一次卖出，不持有股票
+4. 第二次买入，持有股票
+5. 第二次卖出，不持有股票
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 1) return 0;
+        auto dp = std::vector<std::vector<int>>(5, std::vector<int>(prices.size()));
+        dp[0][0] = 0; // 还没买过，不持有股票
+        dp[1][0] = -prices[0]; // 买入第一次，持有股票
+        dp[2][0] = 0; // 第一次卖出，不持有股票
+        dp[3][0] = -prices[0]; // 第二次买入，持有股票
+        dp[4][0] = 0; // 第二次卖出，不持有股票
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = dp[0][j-1];
+            dp[1][j] = std::max(dp[1][j-1], dp[0][j-1] - prices[j]);
+            dp[2][j] = std::max(dp[2][j-1], dp[1][j-1] + prices[j]);
+            dp[3][j] = std::max(dp[3][j-1], dp[2][j-1] - prices[j]);
+            dp[4][j] = std::max(dp[4][j-1], dp[3][j-1] + prices[j]);
+        }
+        return std::max(dp[0][prices.size()-1], std::max(dp[2][prices.size()-1], dp[4][prices.size()-1]));
+    }
+};
+```
+
+顺利通过。
+
+
+### 188. 买卖股票的最佳时机 IV
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/description/
+
+你最多可以完成 k 笔交易。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        if(prices.size() == 1) return 0;
+        auto dp = std::vector<std::vector<int>>(k*2+1, std::vector<int>(prices.size()));
+        // 初始化
+        for(int i = 0; i <= 2*k; ++i) {
+            if(i % 2 == 0) dp[i][0] = 0; // 不持有股票
+            else dp[i][0] = -prices[0]; // 持有股票
+        }
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = dp[0][j-1];
+            for(int i = 1; i <= 2*k; ++i)
+                if(i % 2 == 1) 
+                    dp[i][j] = std::max(dp[i][j-1], dp[i-1][j-1] - prices[j]);
+                else 
+                    dp[i][j] = std::max(dp[i][j-1], dp[i-1][j-1] + prices[j]);
+        }
+        int res = 0;
+        for(int i = 0; i <= 2*k; i+=2) 
+            res = std::max(res, dp[i][prices.size()-1]);
+        return res;
+    }
+};
+```
+
+顺利通过。
+
+### 309. 买卖股票的最佳时机含冷冻期
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/description/
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() == 1) return 0;
+        // 0: 手上有股票: 刚买+之前买的
+        // 1: 手上没有股票: 今天卖的
+        // 2: 手上没有股票: 昨天刚卖（冷冻期）
+        // 3: 手上没有股票: 前天或之前卖的（不在冷冻期）
+        auto dp = std::vector<std::vector<int>>(4, std::vector<int>(prices.size()));
+        dp[0][0] = -prices[0];
+        dp[1][0] = 0; dp[2][0] = 0; dp[3][0] = 0;
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = std::max(dp[0][j-1], std::max(dp[3][j-1] - prices[j], dp[2][j-1]-prices[j]));
+            dp[1][j] = dp[0][j-1] + prices[j]; // 昨天有股票，今天卖掉
+            dp[2][j] = dp[1][j-1]; // 昨天刚卖，今天冷冻期
+            dp[3][j] = std::max(dp[3][j-1], dp[2][j-1]);
+        }
+        return std::max(dp[1][prices.size()-1], std::max(dp[2][prices.size()-1], dp[3][prices.size()-1]));
+    }
+};
+```
+
+> [!NOTE]
+> 这题里面，有个状态要注意一下，一开始写错了：
+> `dp[0][j] = std::max(dp[0][j-1], std::max(dp[3][j-1] - prices[j], dp[2][j-1]-prices[j]));` \
+> 一开始我写成了: `dp[0][j] = std::max(dp[0][j-1], std::max(dp[3][j-1] - prices[j]);` 漏了2号状态。\
+> 这里是要加上的，表示冷冻期刚过，就买入。`dp[2][j-1]`表示昨天处于冷冻期，那今天就可以买了嘛，所以2这个状态是要加上的。
+
+### 714. 买卖股票的最佳时机含手续费
+
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/description/
+
+比较简单。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices, int fee) {
+        if(prices.size() == 1) return 0;
+        auto dp = std::vector<std::vector<int>>(2, std::vector<int>(prices.size()));
+        dp[0][0] = 0; // 第一行不持有
+        dp[1][0] = -prices[0]; // 第二行持有
+        for(int j = 1; j < prices.size(); ++j) {
+            dp[0][j] = std::max(dp[1][j-1] + prices[j] - fee, dp[0][j-1]);
+            dp[1][j] = std::max(dp[1][j-1], dp[0][j-1] - prices[j]);
+        }
+        return dp[0][prices.size()-1];
+    }
+};
+```
