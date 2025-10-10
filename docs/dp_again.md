@@ -36,6 +36,11 @@
     - [188. 买卖股票的最佳时机 IV](#188-买卖股票的最佳时机-iv)
     - [309. 买卖股票的最佳时机含冷冻期](#309-买卖股票的最佳时机含冷冻期)
     - [714. 买卖股票的最佳时机含手续费](#714-买卖股票的最佳时机含手续费)
+  - [子序列系列（困难）](#子序列系列困难)
+    - [300. 最长递增子序列](#300-最长递增子序列)
+    - [674. 最长连续递增序列](#674-最长连续递增序列)
+    - [718. 最长重复子数组](#718-最长重复子数组)
+    - [1143.最长公共子序列](#1143最长公共子序列)
 
 ## 如何复习？
 
@@ -1014,3 +1019,126 @@ public:
     }
 };
 ```
+
+## 子序列系列（困难）
+
+### 300. 最长递增子序列
+
+https://leetcode.cn/problems/longest-increasing-subsequence/description/
+
+这题按照我自己想的思路确实可以通过。
+
+```cpp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        if(nums.size() == 1) return 1;
+        auto dp = std::vector<int>(nums.size(), 1);
+        for(int i = 1; i < nums.size(); ++i) {
+            int _max_length = 1;
+            for(int j = 0; j < i; ++j)
+                if(nums[i] > nums[j]) _max_length = std::max(dp[j]+1, _max_length);
+            dp[i] = _max_length;
+        }
+        return *std::max_element(dp.begin(), dp.end());
+    }
+};
+```
+
+这题还算比较简单的。
+
+我的思路和Carl的思路一样。
+
+### 674. 最长连续递增序列
+
+https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/
+
+这个题目更简单，因为是需要连续，所以只需要从前向后走一次就可以了。
+
+```cpp
+class Solution {
+public:
+    int findLengthOfLCIS(vector<int>& nums) {
+        if(nums.size() == 1) return 1;
+        auto dp = std::vector<int>(nums.size(), 1);
+        for(int i = 1; i < nums.size(); ++i)
+            if(nums[i] > nums[i-1]) dp[i] = dp[i-1] + 1;
+        return *std::max_element(dp.begin(), dp.end());
+    }
+};
+```
+
+### 718. 最长重复子数组
+
+https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/
+
+给两个整数数组 nums1 和 nums2 ，返回 两个数组中 公共的 、长度最长的子数组的长度 。
+
+> [!NOTE]
+> 个人感觉，这个已经进入匹配问题的行列了 \
+> 这种问题是需要：**"i-1", 希望以后的自己可以看懂**
+
+
+这次做，明显感觉比之前熟练了。
+
+还是那句话，dp一定要自己画图！这题本来也不是什么简单题，是一个重要类型题目的基本题。我通过自己画也画出来了。
+
+![](./assets/笔记%202025年10月1日.png)
+
+**这个图推导还是有点问题的，当不相等的情况的时候有点问题。**
+
+**然后修正之后的一个总结：这种子序列问题，最终结果不一定在数组右下角，有可能是不在数组右下角的。**
+
+然后怎么推导的，什么方向，都一目了然了。
+
+真的要自己推。
+
+> [!IMPORTANT]
+> **`dp[i][j]` 表示, 以 `i-1` 和 `j-1` 结尾的子数组**
+
+```cpp
+class Solution {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        auto dp = std::vector<std::vector<int>>(nums1.size()+1, std::vector<int>(nums2.size() +1));
+        int result = 0;
+        for(int i = 1; i <= nums1.size(); ++i) {
+            for(int j = 1; j <= nums2.size(); ++j) {
+                if(nums1[i-1] == nums2[j-1])
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                if (dp[i][j] > result) result = dp[i][j];
+            }
+        }
+        return result;
+    }
+};
+```
+
+> [!IMPORTANT]
+> 为什么这个题在不相等的情况不能继承呢：这是因为这个题要求连续！当下一题，字符串子串匹配就能知道，当可以不连续的时候，就可以dp数组继承！ 
+
+这个才是对的。
+
+### 1143.最长公共子序列
+
+https://leetcode.cn/problems/longest-common-subsequence/
+
+这题是一个非常非常经典的匹配问题的题目。
+
+![](./assets/笔记%202025年10月1日.2.png)
+
+```cpp
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        auto dp = std::vector<std::vector<int>>(text1.size()+1, std::vector<int>(text2.size()+1));
+        for(int i = 1; i <= text1.size(); ++i)
+            for(int j = 1; j <= text2.size(); ++j)
+                if(text1[i-1] == text2[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+                else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);
+        return dp[text1.size()][text2.size()];
+    }
+};
+```
+
+顺利通过。
