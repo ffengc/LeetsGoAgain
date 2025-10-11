@@ -36,11 +36,19 @@
     - [188. 买卖股票的最佳时机 IV](#188-买卖股票的最佳时机-iv)
     - [309. 买卖股票的最佳时机含冷冻期](#309-买卖股票的最佳时机含冷冻期)
     - [714. 买卖股票的最佳时机含手续费](#714-买卖股票的最佳时机含手续费)
-  - [子序列系列（困难）](#子序列系列困难)
+  - [子序列系列](#子序列系列)
     - [300. 最长递增子序列](#300-最长递增子序列)
     - [674. 最长连续递增序列](#674-最长连续递增序列)
     - [718. 最长重复子数组](#718-最长重复子数组)
     - [1143.最长公共子序列](#1143最长公共子序列)
+    - [1035. 不相交的线](#1035-不相交的线)
+    - [53. 最大子数组和](#53-最大子数组和)
+    - [编辑距离之——392. 判断子序列](#编辑距离之392-判断子序列)
+    - [编辑距离之——115. 不同的子序列](#编辑距离之115-不同的子序列)
+    - [编辑距离之——583. 两个字符串的删除操作](#编辑距离之583-两个字符串的删除操作)
+    - [编辑距离之——72. 编辑距离](#编辑距离之72-编辑距离)
+    - [647. 回文子串](#647-回文子串)
+    - [516. 最长回文子序列](#516-最长回文子序列)
 
 ## 如何复习？
 
@@ -1020,7 +1028,7 @@ public:
 };
 ```
 
-## 子序列系列（困难）
+## 子序列系列
 
 ### 300. 最长递增子序列
 
@@ -1142,3 +1150,233 @@ public:
 ```
 
 顺利通过。
+
+### 1035. 不相交的线
+
+https://leetcode.cn/problems/uncrossed-lines/description/
+
+这题和上一题一模一样
+
+```cpp
+class Solution {
+public:
+    int maxUncrossedLines(vector<int>& nums1, vector<int>& nums2) {
+        auto dp = std::vector<std::vector<int>>(nums1.size()+1, std::vector<int>(nums2.size()+1));
+        for(int i = 1; i <= nums1.size(); ++i)
+            for(int j = 1; j <= nums2.size(); ++j)
+                if(nums1[i-1] == nums2[j-1]) dp[i][j]=dp[i-1][j-1]+1;
+                else dp[i][j]=std::max(dp[i-1][j], dp[i][j-1]);
+        return dp[nums1.size()][nums2.size()];
+    }
+};
+```
+
+### 53. 最大子数组和
+
+https://leetcode.cn/problems/maximum-subarray/description/
+
+dp思路很简单，贪心就行。
+1. 选自己
+2. 选前面的结果加上自己
+
+```cpp
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        if(nums.size() == 1) return nums[0];
+        auto dp = std::vector<int>(nums.size());
+        dp[0] = nums[0];
+        for(int i = 1; i < nums.size(); ++i)
+            dp[i] = std::max(nums[i], nums[i] + dp[i-1]);
+        return *std::max_element(dp.begin(), dp.end());
+    }
+};
+```
+
+轻松通过
+
+### 编辑距离之——392. 判断子序列
+
+https://leetcode.cn/problems/is-subsequence/description/
+
+这题其实也是匹配问题。跟上面那个其实是一样的，只不过是上面那个是两边找，这个是单方面找。
+
+```cpp
+class Solution {
+public:
+    bool isSubsequence(string s, string t) {
+        auto dp = std::vector<std::vector<int>>(t.size()+1, std::vector<int>(s.size()+1));
+        for(int i = 1; i <= t.size(); ++i)
+            for(int j = 1; j <= s.size(); ++j)
+                if(t[i-1] == s[j-1]) dp[i][j] = dp[i-1][j-1]+1;
+                else dp[i][j] = dp[i-1][j];
+        return dp[t.size()][s.size()] == s.size();
+    }
+};
+```
+
+顺利通过。
+
+看来掌握的不错，good
+
+还得要画图！搞清楚继承关系。搞清楚递推方向，简简单单。
+
+![](./assets/笔记%202025年10月1日.3.png)
+
+
+### 编辑距离之——115. 不同的子序列
+
+https://leetcode.cn/problems/distinct-subsequences/
+
+这题算是比较难的一题了。
+
+递推公式其实一直没有想到，但是通过画图还是能弄出来一点。
+
+![](./assets/ScreenShot_2025-10-11_134800_389.png)
+
+其实推的差不多了。这以下几点一下子没想到：
+- 第一列是要初始化的：在rabbbit中出现一个空字符串的方法有几种，其实就是一种，方法就是全部删掉。
+- 当相同的时候，是左上角和上面相加
+- 当不同的时候，是继承正上方的
+
+```cpp
+class Solution {
+public:
+    int numDistinct(string s, string t) {
+        auto dp = std::vector<std::vector<uint64_t>>(s.size()+1, std::vector<uint64_t>(t.size()+1));
+        for(int i = 0; i <= s.size(); ++i) dp[i][0] = 1; // 初始化第一列
+        for(int i = 1; i <= s.size(); ++i)
+            for(int j = 1; j <= t.size(); ++j)
+                if(s[i-1] == t[j-1]) dp[i][j] = dp[i-1][j] + dp[i-1][j-1];
+                else dp[i][j] = dp[i-1][j];
+        return dp[s.size()][t.size()];
+    }
+};
+```
+
+
+### 编辑距离之——583. 两个字符串的删除操作
+
+https://leetcode.cn/problems/delete-operation-for-two-strings/description/
+
+```cpp
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        auto dp = std::vector<std::vector<int>>(word1.size()+1, std::vector<int>(word2.size()+1));
+        // 初始化第一行和第一列
+        for(int i = 0; i <= word1.size(); ++i) dp[i][0] = i;
+        for(int j = 0; j <= word2.size(); ++j) dp[0][j] = j;
+        // dp
+        for(int i = 1; i <= word1.size(); ++i)
+            for(int j = 1; j <= word2.size(); ++j)
+                if(word1[i-1] == word2[j-1]) dp[i][j] = dp[i-1][j-1];
+                else dp[i][j] = std::min(dp[i-1][j], dp[i][j-1]) + 1;
+        return dp[word1.size()][word2.size()];
+    }
+};
+```
+
+通过画图，顺利通过。再次强调：一定要画图。
+
+![](./assets/笔记%202025年10月1日.4.png)
+
+### 编辑距离之——72. 编辑距离
+
+https://leetcode.cn/problems/edit-distance/description/
+
+```cpp
+class Solution {
+public:
+    int minDistance(string s, string t) {
+        auto dp = std::vector<std::vector<int>>(s.size()+1, std::vector<int>(t.size()+1));
+        for(int i = 0; i <= s.size(); ++i) dp[i][0] = i;
+        for(int j = 0; j <= t.size(); ++j) dp[0][j] = j;
+        for(int i = 1; i <= s.size(); ++i)
+            for(int j = 1; j <= t.size(); ++j)
+                if(s[i-1] == t[j-1]) dp[i][j] = dp[i-1][j-1];
+                else dp[i][j] = std::min(dp[i][j-1], std::min(dp[i-1][j], dp[i-1][j-1]))+1;
+        return dp[s.size()][t.size()];
+    }
+};
+```
+
+通过画图，顺利通过。
+
+![](./assets/笔记%202025年10月1日.5.png)
+
+### 647. 回文子串
+
+https://leetcode.cn/problems/palindromic-substrings/
+
+这个题思路是这样的
+
+dp[j][i]表示区间j,i能否组成回文
+
+如果 s[j] != s[i], 一定不可以，直接给false
+
+如果 s[j] == s[i]，就要分情况
+- 如果 i==j，那不就是一个字符，true
+- 如果 i-j==1，两个相同字符，回文
+- 如果 i-j>1, 就要判断 s[j+1][i-1]是否是回文，
+
+> [!TIP]
+> 遍历顺序，谁在外层啥的，这些要搞清楚。
+
+```cpp
+class Solution {
+public:
+    int countSubstrings(string s) {
+        auto dp = std::vector<std::vector<bool>>(s.size(), std::vector<bool>(s.size()));
+        int result = 0;
+        for(int i = 0; i < s.size(); ++i) {
+            for(int j = i; j >=0; --j) {
+                if(s[i] == s[j]) {
+                    if(i - j <= 1) {
+                        dp[i][j] = true;
+                        result++;
+                    } else {
+                        if(dp[i-1][j+1]) {
+                            dp[i][j] = true;
+                            result++;
+                        }
+                    }
+                } else if (s[i] != s[j]) dp[i][j] = false;
+            }
+        }
+        return result;
+    }
+};
+```
+
+顺利通过。
+
+### 516. 最长回文子序列
+
+https://leetcode.cn/problems/longest-palindromic-subsequence/description/
+
+我通过画图，总结出来的递推是：
+- 不相同的时候，继承右边和上面较大的那个
+- 相同的时候，继承右上角，并+2
+
+```cpp
+class Solution {
+public:
+    int longestPalindromeSubseq(string s) {
+        auto dp = std::vector<std::vector<int>>(s.size(), std::vector<int>(s.size()));
+        for(int i = 0; i < s.size(); ++i) 
+            for(int j = i; j >= 0; --j) 
+                if(i == j) dp[i][j] = 1;
+                else
+                    if(s[i] == s[j]) dp[i][j] = dp[i-1][j+1] + 2;
+                    else dp[i][j] = std::max(dp[i-1][j], dp[i][j+1]);
+        return dp[s.size()-1][0];
+    }
+};
+```
+
+太舒服了，直接通过。
+
+还得是要画图啊！！！！
+
+dp的复习到此为止了。
