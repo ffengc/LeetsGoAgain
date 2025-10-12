@@ -1,241 +1,238 @@
 # LeetsGoAgain
 
-2025年的6月份，开始系统性刷leetcode。之前大一的时候刷过几百道题，但是之前因为没有系统性刷，算法在大学这几年都有些忘记了。
+- [English](./README.md)
+- [中文](./README-CN.md)
 
-这个仓库是为了记录和督促自己的进度，并对刷过的题进行记录。打算先刷一次中文，后面再转到英文。
+In June 2025, I started systematically solving LeetCode problems. I had already practiced a few hundred problems back in my freshman year, but since I didn’t study algorithms in a structured way back then, I’ve forgotten quite a bit over the years.
 
-所有内容参照：程序员Carl整理的内容: https://programmercarl.com/
+This repository is created to record and motivate my progress, as well as to keep track of the problems I’ve solved. I plan to go through them in Chinese first, and later switch to English.
 
-<!-- ## 重新刷题数量记录
+**All materials referenced from:** Programmer Carl’s collection: https://programmercarl.com/
 
-<center>
+## [Array `./docs/arrays.md`](./docs/arrays.md)
+  - Array theory basics  
+  - Binary search  
+  - Remove elements  
+  - Minimum size subarray sum  
+  - Spiral Matrix II  
+  - Range sum (prefix sum concept)  
+  - Developer buys land (prefix sum)  
+  - Summary  
 
-| 简单 | 中等 | 困难 | 总数 |
-|-----|-----|-----|-----|
-| 17 | 8 | 1 | 26 |
+## [Linked List `./docs/list.md`](./docs/list.md)
+  - Linked list basics  
+  - Remove linked list elements  
+  - Design linked list  
+  - Reverse linked list  
+  - Swap nodes in pairs  
+  - Remove Nth node from end of list  
+  - Intersection of two linked lists  
+  - Linked list cycle II (important: how to detect a cycle)  
 
-</center> -->
+## [Hash Table `./docs/hash_tables.md`](./docs/hash_tables.md)
+  - Hash table basics  
+  - Valid anagram  
+  - Intersection of two arrays  
+    - “So all hash problems can just use a set instead of an array?” — Not always true, depends on the scenario.  
+  - Happy number  
+  - Two sum (classic and important)  
+  - Four sum II (classic and important)  
+  - Ransom note  
+  - Three sum (classic and important)  
+    - The hash approach is complex; this one is better solved with two pointers.  
+  - Four sum (classic and important)  
 
+## [String `./docs/string.md`](./docs/string.md)
+  - Reverse string  
+  - Reverse string II  
+  - Replace spaces  
+  - Reverse words in a string  
+  - Left rotate string  
+  - String matching algorithms (important)  
 
-## [数组 `./docs/arrays.md`](./docs/arrays.md)
-  - 数组理论知识
-  - 二分查找
-  - 移除元素
-  - ⻓度最⼩的⼦数组
-  - 螺旋矩阵II
-  - 区间和 (前缀和思想)
-  - 开发商购买土地 (前缀和)
-  - 总结
+## [Stack & Queue `./docs/stack_and_queue.md`](./docs/stack_and_queue.md)
+  - Stack and queue basics  
+  - Implement queue using stacks  
+  - Implement stack using queues  
+  - Valid parentheses  
+  - Remove all adjacent duplicates in string  
+  - Evaluate reverse Polish notation (important: postfix expressions)  
+  - Sliding window maximum (important: monotonic queue)  
+  - Top K frequent elements (important: heap)  
 
-## [链表 `./docs/list.md`](./docs/list.md)
-  - 链表基础知识
-  - 移除链表元素
-  - 设计链表
-  - 反转链表
-  - 两两交换链表中的节点
-  - 删除链表的倒数第N个节点
-  - 链表相交
-  - 环形链表II (重要: 如何判环)
-## [哈希表 `./docs/hash_tables.md`](./docs/hash_tables.md)
-  - 哈希表基础知识
-  - 有效的字⺟异位词
-  - 两个数组的交集
-    - 那所有哈希的题都用set就好了，还用什么数组？这是对的吗？
-  - 快乐数
-  - 两数之和（经典重要题目）
-  - 四数相加II（经典重要题目）
-  - 赎金信
-  - 三数之和（经典重要题目）
-    - 哈希法，比较复杂，这种题目适合用双指针
-  - 四数之和（经典重要题目）
+## [Binary Tree `./docs/binary_tree.md`](./docs/binary_tree.md)
+  - Binary tree basics  
+  - Recursive traversals  
+  - Iterative traversals (important)  
+    - Preorder and postorder traversal  
+    - Inorder traversal  
+  - Unified iterative traversal (harder to understand)  
+    - Null-marker method  
+    - Boolean-flag method  
+  - Level-order traversal (important)  
+    - Level order traversal  
+    - Level order traversal II  
+    - Right side view  
+    - Average of levels  
+    - N-ary tree level order traversal  
+    - Find largest value in each tree row  
+    - Populating next right pointers in each node  
+    - Populating next right pointers in each node II  
+    - Maximum depth of binary tree  
+    - Minimum depth of binary tree  
+  - Invert binary tree  
+  - Symmetric tree  
+    - Recursive method  
+    - Iterative method  
+    - Same tree  
+    - Subtree of another tree  
+  - Maximum depth of binary tree  
+    - Maximum depth of N-ary tree  
+  - Minimum depth of binary tree  
+  - Minimum depth of binary tree (duplicate note)  
+  - Count complete tree nodes  
+  - Balanced binary tree  
+  - All paths in binary tree (important: basic backtracking problem)  
+    - Remember: one recursion call = one backtrack (pop)  
+  - Sum of left leaves  
+  - Find bottom-left tree value  
+    - Level order method  
+    - Recursive method (has tricky details)  
+  - Path sum  
+  - Construct binary tree from inorder and postorder traversal (important pattern)  
+    - Idea and analysis  
+    - Full implementation  
+    - Optimization notes  
+    - Construct binary tree from preorder and inorder traversal (important pattern)  
+    - Can preorder + postorder determine a unique tree?  
+  - Maximum binary tree  
+  - Merge binary trees  
+  - Search in BST  
+  - Validate BST  
+  - Minimum absolute difference in BST  
+  - Mode(s) in BST  
+  - Lowest common ancestor of binary tree (review needed)  
+  - Lowest common ancestor of BST  
+  - Insert into BST  
+  - Delete node in BST (hard)  
+    - Deletion in general binary trees  
+  - Trim BST (review needed)  
+    - Recursive method  
+    - Iterative method (understand this approach)  
+  - Convert sorted array to BST (can relate to AVL rotations)  
+  - Convert BST to greater sum tree (reverse inorder traversal)  
+  - **On July 24, 2025, reviewed binary tree topics and reorganized unfamiliar content into [binary_tree_review.md](./docs/binary_tree_review.md).**  
 
-## [字符串 `./docs/string.md`](./docs/string.md)
-  - 反转字符串
-  - 反转字符串II
-  - 替换空格
-  - 翻转字符串⾥的单词
-  - 左旋转字符串
-  - 字符串匹配算法（重要算法）
+## [Backtracking `./docs/backtracking.md`](./docs/backtracking.md)
+- Backtracking theory basics  
+- Combination  
+- Combination Sum III  
+- Letter combinations of a phone number  
+- Combination Sum  
+- Combination Sum II  
+- Palindrome partitioning (review needed)  
+  - Optimization using DP array  
+- Restore IP addresses  
+- Subsets  
+- Subsets II  
+- Increasing subsequences (review needed)  
+- Permutations  
+- Permutations II  
+- Reconstruct itinerary  
+- N-Queens  
+- Sudoku solver  
 
-## [栈和队列 `./docs/stack_and_queue.md`](./docs/stack_and_queue.md)
-  - 栈和队列理论基础
-  - 用栈实现队列
-  - 用队列实现栈
-  - 有效的括号
-  - 删除字符串中的所有相邻重复项
-  - 逆波兰表达式求值（重要题型：后缀表达式）
-  - 滑动窗口最大值（重要题型：单调队列）
-  - 前K个高频元素（重要题型：堆）
+**Starting from Greedy to Dynamic Programming, the difficulty level increases — each problem must be understood deeply.**  
 
-## [二叉树 `./docs/binary_tree.md`](./docs/binary_tree.md)
-  - 二叉树理论基础
-  - 二叉树的递归遍历
-  - 二叉树的迭代遍历（重要）
-    - 前序和后序遍历
-    - 中序遍历
-  - 二叉树的统一迭代法（较难理解）
-    - 空指针法
-    - boolean法
-  - 二叉树的层序遍历（重要）
-    - 二叉树的层序遍历
-    - 二叉树的层次遍历 II
-    - 二叉树的右视图
-    - 二叉树的层平均值
-    - N叉树的层序遍历
-    - 在每个树行中找最大值
-    - 填充每个节点的下一个右侧节点指针
-    - 填充每个节点的下一个右侧节点指针II
-    - 二叉树的最大深度
-    - 二叉树的最小深度
-  - 翻转二叉树
-  - 对称二叉树
-    - 常规方法
-    - 迭代方法
-    - 相同的树
-    - 另一棵树的子树
-  - 二叉树的最大深度
-    - N 叉树的最大深度
-  - 二叉树的最小深度
-  - 二叉树的最小深度
-  - 完全二叉树的节点个数
-  - 平衡二叉树
-  - 二叉树的所有路径（重要：回溯基本题）
-    - 记住！一次递归对应一次回溯（pop）
-  - 左叶子之和
-  - 找树左下角的值
-    - 层序遍历法
-    - 递归法（有需要注意的点）
-  - 路径总和
-  - 从中序与后序遍历序列构造二叉树（重要题型）
-    - 思路和分析
-    - 完整实现代码
-    - 可以优化的地方
-    - 从前序与中序遍历序列构造二叉树（重要题型）
-    - 前序+后序能确定一棵二叉树吗？
-  - 最大二叉树
-  - 合并二叉树
-  - 二叉搜索树中的搜索
-  - 验证二叉搜索树
-  - 二叉搜索树的最小绝对差
-  - 二叉搜索树中的众数
-  - 二叉树的最近公共祖先（需要复习）
-  - 二叉搜索树的最近公共祖先
-  - 二叉搜索树中的插入操作
-  - 删除二叉搜索树中的节点（难）
-    - 普通二叉树的删除
-  - 修剪二叉树（需要复习）
-    - 递归法
-    - 迭代法（需要理解这种思路）
-  - 将有序数组转换为二叉搜索树（可以联想到：AVL的旋转）
-  - 把二叉搜索树转换为累加树（反中序遍历）
-  - **2025年7月24日，复习二叉树内容，并把不熟悉的内容重新整理到 [binary_tree_review.md](./docs/binary_tree_review.md) 文档中。**
+## [Greedy `./docs/greedy.md`](./docs/greedy.md)
+- Greedy algorithm basics  
+- Assign cookies  
+- Wiggle subsequence  
+- Maximum subarray sum  
+- Best time to buy and sell stock II  
+- Jump game  
+- Jump game II  
+- Maximize array sum after K negations  
+- Gas station  
+- Candy (review needed)  
+- Lemonade change  
+- **‼️ Greedy interval problems (follow the same thought process, review needed)**  
+  - Queue reconstruction by height  
+  - Minimum number of arrows to burst balloons  
+  - Non-overlapping intervals  
+  - Partition labels  
+  - Merge intervals  
+- Monotone increasing digits (review needed)  
+- Binary tree cameras (state machine)  
 
-## [回溯算法 `./docs/backtracking.md`](./docs/backtracking.md)
-- 回溯算法理论基础
-- 组合
-- 组合总和 III
-- 电话号码的字母组合
-- 组合总和
-- 组合总和II
-- 分割回文串（需要复习）
-  - 利用dp数组进行优化
-- 复原 IP 地址
-- 子集
-- 子集II
-- 递增子序列（需要复习）
-- 全排列
-- 全排列 II
-- 重新安排行程
-- N皇后
-- 解数独
+## [Dynamic Programming `./docs/dp.md`](./docs/dp.md)
+- DP section was tough — I went through it twice: [./docs/dp_again.md](./docs/dp_again.md)  
+- Fibonacci numbers  
+- Climbing stairs (can be extended to complete knapsack)  
+- Min cost climbing stairs  
+- Unique paths  
+- Unique paths II  
+- Integer break  
+- Different BSTs  
+- 0/1 Knapsack basics (review needed)  
+  - 0/1 knapsack theory  
+  - 0/1 knapsack optimized to rolling array  
+- 0/1 Knapsack: determining if the bag can be filled  
+  - Partition equal subset sum  
+  - Last stone weight II  
+- 0/1 Knapsack: counting number of ways to fill  
+  - Target sum  
+- Ones and zeros (review needed)  
+- Complete knapsack basics  
+  - 2D DP version  
+  - 1D DP version (not covered yet)  
+- Coin change II  
+  - 2D DP version  
+  - 1D DP version (important! many details, review‼️)  
+    - The order of loops determines whether it’s combinations or permutations  
+- Combination Sum IV  
+- Climbing stairs (advanced version)  
+- Coin change (my first self-solved knapsack variation! 👍)  
+- Perfect squares (same idea as above)  
+- Word break (review needed)  
+- Multi-knapsack basics  
+- Knapsack summary  
+- House robber series  
+  - House robber I  
+  - House robber II (how to handle circular case)  
+  - House robber III (DP on trees)  
+- Stock trading series  
+  - Best time to buy and sell stock I  
+  - Best time to buy and sell stock II  
+  - Best time to buy and sell stock III  
+  - Best time to buy and sell stock IV  
+  - Best time to buy and sell stock with transaction fee  
+  - Best time to buy and sell stock with cooldown  
+- Longest subsequence/subarray problems‼️  
+  - Longest increasing subsequence  
+  - Longest continuous increasing subsequence  
+- Subsequence/subarray matching problems‼️  
+  - Maximum length of repeated subarray  
+  - Longest common subsequence  
+  - Uncrossed lines  
+- Maximum subarray sum  
+- Edit distance series (hard‼️)  
+  - Is subsequence  
+  - Distinct subsequences  
+  - Delete operation for two strings  
+  - Edit distance  
+- Palindromic problems  
+  - Palindromic substrings  
+  - Longest palindromic subsequence  
 
-**从贪心开始，到动态规划，就会上难度了，后面要好好理解每一道题。**
+## [Monotonic Stack `./docs/monotonic_stack.md`](./docs/monotonic_stack.md)
+- Introduction to monotonic stack  
+- Daily temperatures  
+- Next greater element I  
+- Next greater element II  
+- Trapping rain water (important)  
+- Largest rectangle in histogram (important)  
 
-## [贪心算法 `./docs/greedy.md`](./docs/greedy.md)
-- 贪心算法理论基础
-- 分发饼干
-- 摆动序列
-- 最大子数组和
-- 买卖股票的最佳时机 II
-- 跳跃游戏
-- 跳跃游戏 II
-- K 次取反后最大化的数组和
-- 加油站
-- 分发糖果（需要复习）
-- 柠檬水找零
-- **‼️贪心算法区间问题（思路都是同样的，需要复习）**
-  - 根据身高重建队列
-  - 用最少数量的箭引爆气球
-  - 无重叠区间
-  - 划分字母区间
-  - 合并区间
-- 单调递增的数字（需要复习）
-- 监控二叉树（状态机）
-
-## [动态规划 `./docs/dp.md`](./docs/dp.md)
-- 斐波那契数
-- 爬楼梯（可以拓展成完全背包问题）
-- 使用最小花费爬楼梯
-- 不同路径
-- 不同路径 II
-- 整数拆分
-- 不同的二叉搜索树
-- 01背包问题基础（需要复习）
-  - 01背包理论基础
-  - 01背包理论基础-优化成滚动数组
-- 01背包解决是否可以装满的问题
-  - 分割等和子集
-  - 最后一块石头的重量 II
-- 01背包解决装满背包有几种方法的问题
-  - 目标和
-- 一和零（需要复习）
-- 完全背包理论基础
-  - 二维数组
-  - 一维数组（未看）
-- 零钱兑换II
-  - 二维数组
-  - 一位数组（重要！细节很多，需要复习‼️）
-    - for内外层的顺序，决定了我们获得的是组合数还是排列数
-- 组合总和 Ⅳ
-- 爬楼梯（进阶版）
-- 零钱兑换（这是我第一次，通过自己思考做出一道背包问题的变形问题！👍）
-- 完全平方数（这个题和上面的完全一样）
-- 单词拆分（需要复习）
-- 多重背包理论基础
-- 背包问题总结篇
-- 打家劫舍系列题目
-  - 打家劫舍
-  - 打家劫舍II（成环应该如何解决）
-  - 打家劫舍III（在二叉树上做dp）
-- 股票买卖系列题目
-  - 买卖股票的最佳时机
-  - 买卖股票的最佳时机II
-  - 买卖股票的最佳时机 III
-  - 买卖股票的最佳时机 IV
-  - 买卖股票的最佳时机含手续费
-  - 买卖股票的最佳时机含冷冻期
-- 最长子序列子数组问题‼️
-  - 最长递增子序列
-  - 最长连续递增序列
-- 子序列子数组匹配问题‼️
-  - 最长重复子数组
-  - 最长公共子序列
-  - 不相交的线
-- 最大子数组和
-- 编辑距离系列题目（难‼️）
-  - 判断子序列
-  - 不同的子序列
-  - 两个字符串的删除操作
-  - 编辑距离
-- 回文串系列
-  - 回文子串
-  - 最长回文子序列
-
-
-## [单调栈 `./docs/monotonic_stack.md`](./docs/monotonic_stack.md)
-- 简单了解一下单调栈
-- 每日温度
-- 下一个更大元素I
-- 下一个更大元素II
-- 接雨水（重要）
-- 状图中最大的矩形（重要）
+## Graph Theory
+- Graph theory is a huge topic that covers a wide range of algorithms. The current repository is already quite extensive, so I’ve decided to create a new dedicated repo to organize all graph-related algorithms.  
+- Let’s conquer graph theory together: [Graphzilla](https://github.com/ffengc/Graphzilla)
