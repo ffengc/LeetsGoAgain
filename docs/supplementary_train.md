@@ -8,6 +8,14 @@
   - [189. 轮转数组](#189-轮转数组)
   - [724. 寻找数组的中心下标](#724-寻找数组的中心下标)
   - [34. 在排序数组中查找元素的第一个和最后一个位置](#34-在排序数组中查找元素的第一个和最后一个位置)
+  - [922. 按奇偶排序数组 II](#922-按奇偶排序数组-ii)
+  - [35. 搜索插入位置](#35-搜索插入位置)
+  - [24. 两两交换链表中的节点](#24-两两交换链表中的节点)
+  - [234. 回文链表](#234-回文链表)
+  - [143. 重排链表](#143-重排链表)
+  - [141. 环形链表](#141-环形链表)
+  - [205. 同构字符串](#205-同构字符串)
+  - [1002. 查找共用字符](#1002-查找共用字符)
 
 
 ## 1365.有多少小于当前数字的数字
@@ -205,3 +213,430 @@ Carl的思路也是一样的。
 
 ## 34. 在排序数组中查找元素的第一个和最后一个位置
 
+https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/description/
+
+给你一个按照非递减顺序排列的整数数组 nums，和一个目标值 target。请你找出给定目标值在数组中的开始位置和结束位置。
+
+如果数组中不存在目标值 target，返回 [-1, -1]。
+
+你必须设计并实现时间复杂度为 O(log n) 的算法解决此问题。
+
+我先试试直接分成两个函数来找，然后再看看怎么合并。
+
+```cpp
+class Solution {
+private:
+    int find_lower_bound(const std::vector<int>& nums, int target) {
+        int left = 0;
+        int right = nums.size() - 1;
+        if(nums[left] == target) return left;
+        while(left < right) {
+            int mid = (left + right) / 2;
+            if(nums[mid] < target) left = mid;
+            else if(nums[mid] >= target) right = mid;
+            if(left + 1 == right) {
+                left++; break;
+            }
+        }
+        assert(left == right);
+        return nums[right] == target ? right : -1;
+    }
+    int find_upper_bound(const std::vector<int>& nums, int target) {
+        int left = 0;
+        int right = nums.size() - 1;
+        if(nums[right] == target) return right;
+        while(left < right) {
+            int mid = (left + right) / 2;
+            if(nums[mid] <= target) left = mid;
+            else if(nums[mid] > target) right = mid;
+            if(left + 1 == right) {
+                right--; break;
+            }
+        }
+        assert(left == right);
+        return nums[left] == target ? left : -1;       
+    }
+public:
+    vector<int> searchRange(vector<int>& nums, int target) {
+        if(nums.size() == 0) return {-1, -1};
+        int left = find_lower_bound(nums, target);
+        int right = find_upper_bound(nums, target);
+        return {left, right};
+    }
+};
+```
+
+虽然做出来了，但是感觉写的有点捞。感觉做了很多判断。不过这题也没啥好说的。
+
+## 922. 按奇偶排序数组 II
+
+https://leetcode.cn/problems/sort-array-by-parity-ii/description/
+
+给定一个非负整数数组 nums，  nums 中一半整数是 奇数 ，一半整数是 偶数 。
+
+对数组进行排序，以便当 nums[i] 为奇数时，i 也是 奇数 ；当 nums[i] 为偶数时， i 也是 偶数 。
+
+你可以返回 任何满足上述条件的数组作为答案 。
+
+我感觉可以控制两个指针，一个来指向奇数位置，一个指向偶数位置。
+
+然后遇到不合法的就停下来。进行swap。
+
+```cpp
+class Solution {
+public:
+    vector<int> sortArrayByParityII(vector<int>& nums) {
+        // 控制两个指针
+        int odd_ptr = 1;
+        int even_ptr = 0;
+        while(odd_ptr < nums.size() && even_ptr < nums.size()) {
+            // 寻找奇数指针的非法位置
+            while(odd_ptr < nums.size() && nums[odd_ptr] % 2 == 1) odd_ptr += 2;
+            // 寻找偶数指针的非法位置
+            while(even_ptr < nums.size() && nums[even_ptr] % 2 == 0) even_ptr += 2;
+            // 因为题目说明了一半一半，所以这里放心
+            if(odd_ptr < nums.size() && even_ptr < nums.size())
+                std::swap(nums[odd_ptr], nums[even_ptr]);
+            else break;
+        }
+        return nums;
+    }
+};
+```
+
+顺利通过，简单。
+
+## 35. 搜索插入位置
+
+https://leetcode.cn/problems/search-insert-position/description/
+
+给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+
+请必须使用时间复杂度为 O(log n) 的算法。
+
+搜索树的插入，不多说。
+
+```cpp
+class Solution {
+public:
+    int searchInsert(vector<int>& nums, int target) {
+        int left = 0;
+        int right = nums.size() - 1;
+        while(left <= right) {
+            if(nums[left] == target) return left;
+            if(nums[right] == target) return right;
+            int mid = (left + right) / 2;
+            if(nums[mid] < target) left = mid + 1;
+            else if(nums[mid] > target) right = mid - 1;
+            else if(nums[mid] == target) return mid;
+        }
+        return left;
+    }
+};
+```
+
+## 24. 两两交换链表中的节点
+
+https://leetcode.cn/problems/swap-nodes-in-pairs/description/
+
+这个没问题，我擅长的领域来了。
+
+```cpp
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* swapPairs(ListNode* head) {
+        if(!head) return nullptr;
+        if(head->next == nullptr) return head; // 只有一个节点
+        // 弄个dummy节点
+        ListNode* dummy_head = new ListNode(0);
+        dummy_head->next = head;
+        ListNode* prev = dummy_head;
+        ListNode* ptr1 = head;
+        ListNode* ptr2 = head->next;
+        while(ptr2) {
+            ListNode* nnext = ptr2->next;
+            // 交换ptr1, ptr2
+            prev->next = ptr2;
+            ptr2->next = ptr1;
+            ptr1->next = nnext;
+            // 迭代
+            prev = ptr1;
+            ptr1 = nnext;
+            if(!ptr1) break;
+            ptr2 = ptr1->next;
+        }
+        return dummy_head->next;
+    }
+};
+```
+
+## 234. 回文链表
+
+https://leetcode.cn/problems/palindrome-linked-list/description/
+
+```cpp
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {
+        // 题目说了不能为空
+        if(head->next == nullptr) return true;
+        // 先计算链表长度
+        int len = 0;
+        ListNode* cur = head;
+        while(cur) {
+            cur = cur->next;
+            len++;
+        }
+        // len可能是奇数也可能是偶数
+        ListNode* dummy_head = new ListNode();
+        // 头插
+        cur = head;
+        ListNode* new_list_next = dummy_head->next;
+        for(int i = 0; i < len / 2; ++i) {
+            auto next = cur->next;
+            dummy_head->next = cur;
+            cur->next = new_list_next;
+            new_list_next = cur;
+            cur = next;
+        }
+        // 匹配
+        ListNode* match_head1 = nullptr;
+        if(len % 2 == 0)
+            match_head1 = cur;
+        else if(len % 2 == 1)
+            match_head1 = cur->next;
+        ListNode* match_head2 = dummy_head->next;
+        while(match_head1 && match_head2) {
+            if(match_head1->val != match_head2->val) return false;
+            match_head1 = match_head1->next;
+            match_head2 = match_head2->next;
+        }
+        if(match_head1 && !match_head2) return false;
+        if(!match_head1 && match_head2) return false;
+        return true;
+    }
+};
+```
+
+虽然有些复杂，但一次过。链表果然是我的主场。
+
+1. 计算长度
+2. 把前一半头插到另一个哨兵头中，完成前半部分翻转
+3. 长度是奇数和偶数是有区别的，如果是奇数，match的时候要略过最中间那个
+4. 最后一个一个match就行了
+5. 计算长度遍历一次，然后match的时候遍历第二次，O(n)
+
+## 143. 重排链表
+
+https://leetcode.cn/problems/reorder-list/description/
+
+给定一个单链表 L 的头节点 head ，单链表 L 表示为：
+
+L0 → L1 → … → Ln - 1 → Ln
+请将其重新排列后变为：
+
+L0 → Ln → L1 → Ln - 1 → L2 → Ln - 2 → …
+
+不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
+
+我的思路，先拿出来然后插进去，这样遍历两次，也是 O(n)
+
+```cpp
+class Solution {
+public:
+    void reorderList(ListNode* head) {
+        if(head->next == nullptr) return; // 1个节点的情况
+        // 计算链表长度
+        int len = 0;
+        ListNode* cur = head;
+        while(cur) {
+            cur = cur->next;
+            len++;
+        }
+        int subLen = (len % 2 == 1) ? len/2+1 : len/2;
+        // 跳过前sublen个
+        cur = head;
+        ListNode* prev = nullptr;
+        while(subLen--) {
+            prev = cur;
+            cur = cur->next;
+        }
+        prev->next = nullptr; // 断开链表
+        // 
+        ListNode* dummy_head = new ListNode();
+        ListNode* nnext = dummy_head->next; // null
+        while(cur) {
+            ListNode* next = cur->next;
+            dummy_head->next = cur;
+            cur->next = nnext;
+            nnext = cur;
+            cur = next;
+        }
+        // debug new linkedlist:
+        // ListNode* debug_cur = dummy_head;
+        // while(debug_cur) {
+        //     std::cout << debug_cur->val << " ";
+        //     debug_cur = debug_cur->next;
+        // }
+        // debug_cur = head;
+        // std::cout << std::endl;
+        // while(debug_cur) {
+        //     std::cout << debug_cur->val << " ";
+        //     debug_cur = debug_cur->next;
+        // }   
+        // exit(1);     
+        ListNode* insert_prev = head;
+        ListNode* insert_cur = head->next;
+        ListNode* new_list_cur = dummy_head->next;
+        // exit(1);
+        while(new_list_cur) {
+            ListNode* new_list_next = new_list_cur->next;
+            insert_prev->next = new_list_cur;
+            new_list_cur->next = insert_cur;
+            new_list_cur = new_list_next;
+            // 迭代
+            if(!insert_cur) {
+                std::cout << "hello" << std::endl;
+                break;
+            }
+            insert_prev = insert_cur;
+            insert_cur = insert_prev->next;
+        }
+        // debug
+        // ListNode* debug_cur = head;
+        // while(debug_cur) {
+        //     std::cout << debug_cur->val << " ";
+        //     debug_cur = debug_cur->next;
+        // }   
+        // std::cout << "here" << std::endl;
+    }
+};
+```
+
+debug了一会儿，最终还是没问题，做出来了。
+
+## 141. 环形链表
+
+https://leetcode.cn/problems/linked-list-cycle/description/
+
+经典题目，快慢指针。
+
+```cpp
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        ListNode* fast = head;
+        ListNode* slow = head;
+        while(fast && fast->next) {
+            fast = fast->next->next;
+            slow = slow->next;
+            if(fast == slow) return true;
+        }
+        return false;
+    }
+};
+```
+
+## 205. 同构字符串
+
+https://leetcode.cn/problems/isomorphic-strings/description/
+
+给定两个字符串 s 和 t ，判断它们是否是同构的。
+
+如果 s 中的字符可以按某种映射关系替换得到 t ，那么这两个字符串是同构的。
+
+每个出现的字符都应当映射到另一个字符，同时不改变字符的顺序。不同字符不能映射到同一个字符上，相同字符只能映射到同一个字符上，字符可以映射到自己本身。
+
+输入：s = "egg", t = "add" \
+输出：true
+
+感觉可以用哈希表进行一个编码，只要新出现一个字符，就赋予一个数字。
+
+```cpp
+class Solution {
+private:
+    std::vector<int> encoder(const std::string& s) {
+        // 做一个编码，看编码是否相同就行了
+        std::unordered_map<char, int> umap;
+        std::vector<int> encode_result;
+        int noteNumber = 0;
+        for(const auto& e : s) {
+            if(umap.find(e) == umap.end()) {
+                // 这个字符第一次出现
+                umap[e] = noteNumber++;
+                encode_result.push_back(noteNumber);
+            }
+            else {
+                encode_result.push_back(umap[e]);
+            }
+        }
+        return encode_result;
+    }
+public:
+    bool isIsomorphic(string s, string t) {
+        return encoder(s) == encoder(t);
+    }
+};
+```
+
+## 1002. 查找共用字符
+
+https://leetcode.cn/problems/find-common-characters/description/
+
+给你一个字符串数组 words ，请你找出所有在 words 的每个字符串中都出现的共用字符（包括重复字符），并以数组形式返回。你可以按 任意顺序 返回答案。
+ 
+
+示例 1：\
+输入：words = ["bella","label","roller"] \
+输出：["e","l","l"] \
+
+示例 2：\
+输入：words = ["cool","lock","cook"] \
+输出：["c","o"]
+
+
+这题的思路有点抽象，一下子没有想到特别好的方法。看了Carl的思路才想到。
+
+Carl的思路：
+![](https://file1.kamacoder.com/i/algo/1002.查找常用字符.png)
+
+按照这个思路，可以顺利通过。
+
+```cpp
+class Solution {
+private:
+    std::vector<int> encoder(const std::string& str) {
+        auto hash = std::vector<int>(26);
+        for(const auto& e : str)
+            hash[e - 'a'] += 1;
+        return hash;
+    }
+public:
+    vector<string> commonChars(vector<string>& words) {
+        std::vector<std::vector<int>>hash_res;
+        for(const auto& e: words)
+            hash_res.push_back(encoder(e));
+        // 处理最后结果
+        std::vector<std::string> res;
+        for(int j = 0; j < 26; ++j) {
+            int _min = INT_MAX;
+            for(int i = 0; i < hash_res.size(); ++i)
+                _min = std::min(hash_res[i][j], _min);
+            if(_min > 0)
+                for(int k = 0; k < _min; ++k)
+                    res.push_back(std::string(1, j+'a'));
+        }
+        return res;
+    }
+};
+```
