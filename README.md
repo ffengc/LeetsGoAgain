@@ -236,3 +236,25 @@ This repository is created to record and motivate my progress, as well as to kee
 ## Graph Theory
 - Graph theory is a huge topic that covers a wide range of algorithms. The current repository is already quite extensive, so I’ve decided to create a new dedicated repo to organize all graph-related algorithms.  
 - Let’s conquer graph theory together: [Graphzilla](https://github.com/ffengc/Graphzilla)
+
+## [Supplementary Questions](./docs/supplementary_train.md)
+- 1365\. How many numbers are smaller than the current number?
+- 941\. Valid mountain arrays
+- 1207\. Unique occurrences
+- 283\. Shifting zeros
+- 189\. Rotating an array
+- 724\. Finding the center index of an array
+- 34\. Finding the first and last positions of an element in a sorted array
+- 922\. Sorting an array by even/oddness II
+- 35\. Searching for an insertion position
+- 24\. Swapping nodes in a linked list
+- 234\. Palindrome linked lists
+- 143\. Rearranging a linked list
+- 141\. Circular linked lists
+- 205\. Isomorphic strings
+- 1002\. Finding common characters
+- 925\. Long-press input
+- 844\. Comparing strings containing backspaces
+- 129\. Finding the sum of numbers from the root to a leaf node
+- 1382\. Balancing a binary search tree
+- 116\. Filling in the next right node pointer for each node

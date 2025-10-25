@@ -16,6 +16,11 @@
   - [141. 环形链表](#141-环形链表)
   - [205. 同构字符串](#205-同构字符串)
   - [1002. 查找共用字符](#1002-查找共用字符)
+  - [925. 长按键入](#925-长按键入)
+  - [844. 比较含退格的字符串](#844-比较含退格的字符串)
+  - [129. 求根节点到叶节点数字之和](#129-求根节点到叶节点数字之和)
+  - [1382. 将二叉搜索树变平衡](#1382-将二叉搜索树变平衡)
+  - [116. 填充每个节点的下一个右侧节点指针](#116-填充每个节点的下一个右侧节点指针)
 
 
 ## 1365.有多少小于当前数字的数字
@@ -637,6 +642,246 @@ public:
                     res.push_back(std::string(1, j+'a'));
         }
         return res;
+    }
+};
+```
+
+## 925. 长按键入
+
+https://leetcode.cn/problems/long-pressed-name/description/
+
+我原本是按照这个方法的：
+
+```cpp
+class Solution {
+public:
+    bool isLongPressedName(string name, string typed) {
+        // 先用哈希表记录第二个字符串
+        std::unordered_map<char, int> umap;
+        for(const auto& e : typed)
+            umap[e]++;
+        // 遍历第一个字符串
+        for(const auto& e : name) {
+            if(umap.find(e) != umap.end() && umap[e] > 0)
+                umap[e]--;
+            else return false;
+        }
+        return true;
+    }
+};
+```
+
+但是这样确实有bug。
+
+name = "rick" \
+typed = "kric"
+
+应该是 false 而不是 true
+
+所以哈希是不行的，要有顺序。
+
+所以按照Carl的思路，改用双指针吧
+
+```cpp
+class Solution {
+public:
+    bool isLongPressedName(string name, string typed) {
+        int name_ptr = 0;
+        int typed_ptr = 0;
+        while(name_ptr < name.size() && typed_ptr < typed.size()) {
+            std::cout << name[name_ptr] << ":" << typed[typed_ptr] << std::endl;
+            if(name[name_ptr] != typed[typed_ptr]) return false;
+            int type_skip_num = 0;
+            while(typed_ptr + 1 < typed.size() && typed[typed_ptr + 1] == typed[typed_ptr]) {
+                type_skip_num++;
+                typed_ptr++;
+            }
+            // 此时 name_ptr 也要跳过重复字符
+            int name_skip_num = 0;
+            while(name_ptr + 1 < name.size() && name[name_ptr + 1] == name[name_ptr]) {
+                name_skip_num++;
+                name_ptr++;
+            }
+            if(name_skip_num > type_skip_num) return false; 
+            typed_ptr++; name_ptr++;
+        }
+        // 如果typed还有剩下，肯定有问题
+        if(typed_ptr < typed.size() || name_ptr < name.size()) return false;
+        return true;
+    }
+};
+```
+
+我是双指针，但和Carl的思路也不是完全一样的，问题不大，debug了一下也通过了。
+
+## 844. 比较含退格的字符串
+
+https://leetcode.cn/problems/backspace-string-compare/description/
+
+```cpp
+class Solution {
+public:
+    bool backspaceCompare(string s, string t) {
+        std::vector<char> st;
+        for(int i = 0; i < s.size(); ++i)
+            if(s[i] != '#') st.push_back(s[i]);
+            else
+                if(!st.empty()) st.pop_back();
+        std::string str1(st.begin(), st.end());
+        st.clear();
+        for(int i = 0; i < t.size(); ++i)
+            if(t[i] != '#') st.push_back(t[i]);
+            else 
+                if(!st.empty()) st.pop_back();
+        std::string str2(st.begin(), st.end());
+        return str1 == str2;
+    }
+};
+```
+
+很简单，用栈就可以了，但是为了比对更方便，用了vector代替stack，stack毕竟没有迭代器。
+
+## 129. 求根节点到叶节点数字之和
+
+https://leetcode.cn/problems/sum-root-to-leaf-numbers/description/
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<int>> all_paths;
+    std::vector<int> layer;
+    void dfs(TreeNode* root) {
+        if(!root) assert(false);
+        layer.push_back(root->val);
+        if(!root->left && !root->right) {
+            all_paths.push_back(layer);
+            layer.pop_back();
+            return;
+        }
+        if(root->left) dfs(root->left);
+        if(root->right) dfs(root->right);
+        layer.pop_back();
+    }
+    int transferVec2Num(std::vector<int>& vec) {
+        // reverse the list: O(n)
+        std::reverse(vec.begin(), vec.end());
+        int sum = 0;
+        for(int i = 0; i < vec.size(); ++i)
+            sum += (pow(10, i) * vec[i]);
+        return sum;
+    }
+public:
+    int sumNumbers(TreeNode* root) {
+        // 先用vec存储所有路径上的数字
+        if(!root) return 0;
+        dfs(root);
+        // debug
+        // for(int i = 0; i < all_paths.size(); ++i) {
+        //     for(int j = 0; j < all_paths[i].size(); ++j) {
+        //         std::cout << all_paths[i][j] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+        // return -1;
+        int res = 0;
+        for(int i = 0; i < all_paths.size(); ++i) 
+            res += transferVec2Num(all_paths[i]);
+        return res;
+    }
+};
+```
+
+顺利通过。
+
+1. 先拿到每条路径的所有数字
+2. 再把每条路径转化成题目要求的结果
+
+## 1382. 将二叉搜索树变平衡
+
+https://leetcode.cn/problems/balance-a-binary-search-tree/description/
+
+这题Carl的思路，也是重新构造，用有序数组重新构造。
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+private:
+    std::vector<int> inOrder;
+    void dfs(TreeNode* root) {
+        if(!root) return;
+        dfs(root->left);
+        inOrder.push_back(root->val);
+        dfs(root->right);
+    }
+    TreeNode* buildBalanceBST(const std::vector<int>& nums) {
+        if(nums.size() == 0) return nullptr;
+        if(nums.size() == 1) return new TreeNode(nums[0]);
+        // 获取中间节点
+        int mid = nums.size() / 2;
+        TreeNode* root = new TreeNode(nums[mid]);
+        TreeNode* left = buildBalanceBST(std::vector<int>(nums.begin(), nums.begin() + mid));
+        TreeNode* right = buildBalanceBST(std::vector<int>(nums.begin() + mid + 1, nums.end()));
+        root->left = left;
+        root->right = right;
+        return root;
+    }
+public:
+    TreeNode* balanceBST(TreeNode* root) {
+        dfs(root);
+        return buildBalanceBST(inOrder);
+    }
+};
+```
+
+easy, 顺利通过。
+
+## 116. 填充每个节点的下一个右侧节点指针
+
+https://leetcode.cn/problems/populating-next-right-pointers-in-each-node/description/
+
+这题不就是层序遍历不就行了吗
+
+```cpp
+class Solution {
+private:
+    std::vector<std::vector<Node*>> layersResult;
+    void bfs(Node* root) {
+        if(!root) return;
+        std::queue<Node*> q;
+        q.push(root);
+        while(!q.empty()) {
+            int sz = q.size();
+            std::vector<Node*> layer;
+            for(int i = 0; i < sz; ++i) {
+                Node* node = q.front();
+                q.pop();
+                layer.push_back(node);
+                if(node->left) q.push(node->left);
+                if(node->right) q.push(node->right);
+            }
+            layersResult.push_back(layer);
+        }
+    }
+public:
+    Node* connect(Node* root) {
+        bfs(root);
+        for(int i = 0; i < layersResult.size(); ++i) {
+            for(int j = 0; j < layersResult[i].size(); ++j) {
+                if(j == layersResult[i].size() - 1) layersResult[i][j]->next = nullptr;
+                else layersResult[i][j]->next = layersResult[i][j+1];
+            }
+        }
+        return root;
     }
 };
 ```
