@@ -3,6 +3,14 @@
 - [English](./README.md)
 - [中文](./README-CN.md)
 
+# Second Part
+
+In January 2026, I plan to start reviewing all the problems again on the English version of the LeetCode website, beginning with the top 150 most frequent problems.
+
+- [top150.md](./docsEn/top150.md)
+
+# First Part
+
 In June 2025, I started systematically solving LeetCode problems. I had already practiced a few hundred problems back in my freshman year, but since I didn’t study algorithms in a structured way back then, I’ve forgotten quite a bit over the years.
 
 This repository is created to record and motivate my progress, as well as to keep track of the problems I’ve solved. I plan to go through them in Chinese first, and later switch to English.
